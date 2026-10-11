@@ -1,0 +1,23 @@
+name: uw-assistant
+
+include:
+  - sim-harness/docker-compose.yml
+
+services:
+  app:
+    build: .
+    environment:
+      LEADGEN_URL: http://leadgen:8080
+      MAILBOX_URL: http://mailbox:8080
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      UW_OFFLINE: ${UW_OFFLINE:-0}
+      UW_AUTOSEND_DISABLED: ${UW_AUTOSEND_DISABLED:-0}
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      leadgen:
+        condition: service_healthy
+      mailbox:
+        condition: service_healthy

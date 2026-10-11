@@ -1,0 +1,9 @@
+.git
+.venv
+data
+evals/out
+tests
+docs
+sim-harness/.venv
+sim-harness/data
+**/__pycache__
