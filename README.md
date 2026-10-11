@@ -37,6 +37,7 @@ make check-llm         # two tiny calls to verify the setup
 make demo
 ```
 
+- `docker compose` reads `.env`: with a key present the container runs live; set `UW_OFFLINE=1` to force offline mode.
 - Model: `claude-opus-5-5` at low effort.
 - Server-side refusal fallback is enabled.
 - Any API problem falls back to the templates; the queue never stalls on the model.
@@ -136,4 +137,4 @@ Observed on 2026-10-08 against the harness's own leadgen and mailbox services. R
 - Closed loop after two simulated reply rounds: offline 14 quoted, 5 declined, 1 awaiting the underwriter (8 quotes with no underwriter touch, reply extraction 0.904); live 6 quoted, 3 declined, 1 awaiting (4 with no touch, reply extraction 0.94). Hallucinated values: 0 in both.
 - Morning queue (seed 42): 4 follow-ups sent (one per lead), 6 leads waiting on an underwriter decision (3 decline confirmations, 3 reviews before their one email), Tier 1 leads first.
 - The first live run found a real defect: the code-written subject and closing promised to "finalize your quote", which the policy forbids, so the moderator rejected every agent-written follow-up (14 rejections, 62% false positives on the good red-team emails) and the run silently fell back to templates. Fixed in design §17.12.
-- **Not yet run:** the Docker path (`make up`, `docker compose up --build`), because host processes still held ports 8081 and 8025 when this was written.
+- Docker path verified from a clean mailbox: `make up` + `make eval` (all gates PASS) and `docker compose up --build` (board on `127.0.0.1:8090`). The morning queue sent 4 follow-ups (one per lead) and opened 6 underwriter cards; a decline click sent one notice and a second click returned 409; one round of simulated broker replies produced 4 quotes; no lead ever got more than one follow-up per round.
