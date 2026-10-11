@@ -1,0 +1,12 @@
+{
+  "LEAD-00000042-000": {"action": "request_uw_decision", "no_email": true, "recommendation": "decline", "must_ask": []},
+  "LEAD-00000042-001": {"action": "send_followup", "no_email": false, "format": "incomplete_submission", "must_ask": ["street_address", "number_of_residents", "coverage_a", "coverage_f", "structure_type", "num_stories", "roof_shape", "electrical_panel_brand", "electrical_panel_size_amps", "water_heater_type", "water_heater_age_years", "water_heater_location", "fire_alarm", "dist_to_nearest_fire_hydrant"]},
+  "LEAD-00000042-002": {"action": "request_uw_decision", "no_email": true, "recommendation": "approve", "must_ask": ["residence_held_in_trust", "trust_name", "coverage_a", "roof_shape", "electrical_panel_brand", "dist_to_nearest_fire_hydrant"]},
+  "LEAD-00000042-003": {"action": "request_uw_decision", "no_email": true, "recommendation": "decline", "must_ask": []},
+  "LEAD-00000042-004": {"action": "send_followup", "no_email": false, "format": "itemized", "must_ask": ["coverage_a", "property_purchase_date", "num_stories", "fire_department_type", "number_of_residents"]},
+  "LEAD-00000042-005": {"action": "request_uw_decision", "no_email": true, "recommendation": "approve", "must_ask": ["state", "first_name", "residence_held_in_trust", "trust_name", "coverage_e", "square_feet", "num_stories", "roof_material", "electrical_panel_size_amps", "water_heater_type", "water_heater_age_years", "water_heater_location", "distance_to_fire_department", "fire_department_type", "dist_to_nearest_fire_hydrant", "number_of_residents"]},
+  "LEAD-00000042-006": {"action": "request_uw_decision", "no_email": true, "recommendation": "decline", "must_ask": []},
+  "LEAD-00000042-007": {"action": "request_uw_decision", "no_email": true, "recommendation": "approve", "must_ask": ["zip", "coverage_e", "property_purchase_date", "has_animals", "square_feet", "roof_shape", "electrical_panel_brand"]},
+  "LEAD-00000042-008": {"action": "send_followup", "no_email": false, "format": "itemized", "must_ask": ["property_purchase_date", "electrical_panel_brand"]},
+  "LEAD-00000042-009": {"action": "send_followup", "no_email": false, "format": "itemized", "must_ask": ["acreage"]}
+}
