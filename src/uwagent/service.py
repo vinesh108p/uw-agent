@@ -13,6 +13,8 @@ from .assessment import UW_CHOICES, Assessment, build_assessment
 from .config import Settings
 from .llm import LLM
 from .policy import Policy
+from .replies import parse_reply, validate_extraction
+from .simulator import persona_for, simulate_reply
 from .registry import Registry
 from .render import template_decline_message
 from .store import Store
@@ -75,6 +77,47 @@ class Service:
         ids.sort(key=self.priority)  # Tier 1 brokers first, then the nearest effective date
         with ThreadPoolExecutor(max_workers=self.settings.concurrency) as pool:
             return [result for result in pool.map(self.advance, ids) if result is not None]
+
+    def last_followup_items(self, lead_id: str) -> list[str]:
+        rows = [row for row in self.store.outbox_for(lead_id) if row["kind"] == "followup"]
+        return list(rows[-1]["payload"]["items"]) if rows else []
+
+    def receive_reply(self, lead_id: str, body: str) -> RunResult | None:
+        case = self.store.get_case(lead_id)
+        if case is None:
+            raise KeyError(lead_id)
+        if case["state"] == "DECLINED":
+            raise ValueError(f"{lead_id} is declined; replies are no longer accepted")
+        round_ = case["rounds_sent"]
+        asked = self.last_followup_items(lead_id)
+        extraction = parse_reply(self.llm, self.registry, asked, body)
+        facts, flags = validate_extraction(extraction, self.registry, asked, round_=round_)
+        self.store.add_message_in(lead_id, round_, body, extraction.model_dump())
+        for fact in facts:
+            self.store.add_fact(lead_id, fact)
+        for flag in flags:
+            self.store.add_flag(lead_id, round_, flag)
+        open_card = self.store.open_card_for(lead_id)
+        if open_card is not None:
+            self.store.close_card(open_card["id"], "superseded")
+        self.store.update_case(lead_id, state="ASSESSED")
+        self.store.add_event(lead_id, "reply_received", {"round": round_, "facts": [f.field for f in facts], "flags": flags,
+                                                         "intent": extraction.intent})
+        return self.advance(lead_id)
+
+    def simulate_replies(self) -> int:
+        count = 0
+        for lead_id in self.store.lead_ids():
+            case = self.store.get_case(lead_id)
+            if case["state"] != "FOLLOW_UP_SENT":
+                continue
+            persona = persona_for(lead_id, case["rounds_sent"])
+            body, expected = simulate_reply(persona, self.last_followup_items(lead_id), self.registry, lead_id,
+                                            self.assess(lead_id).values)
+            self.store.add_event(lead_id, "simulated_reply", {"round": case["rounds_sent"], "persona": persona, "expected": expected})
+            self.receive_reply(lead_id, body)
+            count += 1
+        return count
 
     def resolve_card(self, card_id: int, choice: str, note: str = "", message: str | None = None) -> None:
         if choice not in UW_CHOICES:

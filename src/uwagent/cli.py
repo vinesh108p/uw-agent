@@ -39,6 +39,8 @@ def _run(args: argparse.Namespace, settings: Settings) -> int:
     try:
         service.ingest_queue(seed=args.seed)
         results = {result.lead_id: result for result in service.advance_all()}
+        for _ in range(args.reply_rounds):
+            service.simulate_replies()
     except httpx.HTTPError as exc:
         print(f"error: leadgen is not reachable at {settings.leadgen_url} ({type(exc).__name__}). "
               "Start the harness with `make up`.", file=sys.stderr)
@@ -59,6 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--seed", type=int, default=42)
     run.add_argument("--offline", action="store_true", help="never call the model (deterministic templates)")
     run.add_argument("--db", help="SQLite path (default data/uwagent.db)")
+    run.add_argument("--reply-rounds", type=int, default=0, help="simulate this many rounds of broker replies")
     args = parser.parse_args(argv)
     settings = _settings(args)
     if args.command == "run":

@@ -39,3 +39,19 @@ def test_uw_approval_sends_one_consolidated_email(service):
     [email] = service.mailbox.emails_for_lead(lead_id)
     assert set(email["metadata"]["items"]) == set(GOLD[lead_id]["must_ask"])
     assert "Terms to expect on the quote:" in email["body"] and "Personal liability coverage is excluded" in email["body"]
+
+from uwagent.simulator import simulate_reply
+
+
+def test_every_lead_with_asks_gets_exactly_one_email_before_its_outcome(service, registry):
+    service.advance_all()
+    for card in service.store.list_open_cards():
+        if card["payload"]["recommendation"] == "approve":
+            service.resolve_card(card["id"], "approve")
+    waiting = [lid for lid in service.store.lead_ids() if service.store.get_case(lid)["state"] == "FOLLOW_UP_SENT"]
+    assert len(waiting) == 7
+    for lead_id in waiting:
+        body, _ = simulate_reply("complete", service.last_followup_items(lead_id), registry, lead_id, service.assess(lead_id).values)
+        service.receive_reply(lead_id, body)
+        assert [e["metadata"]["kind"] for e in service.mailbox.emails_for_lead(lead_id)].count("followup") == 1
+    assert {service.store.get_case(lid)["state"] for lid in waiting} <= {"QUOTED", "AWAITING_UW"}
