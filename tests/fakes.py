@@ -99,3 +99,10 @@ def make_context(lead, registry, tmp_path, *, llm=None, decision=None, extra_fac
                       sender=Sender(store, mailbox, settings.from_address), llm=llm, run_id="test-run",
                       other_lead_ids=[lead.lead_id])
     return ctx, mailbox
+
+def make_service(tmp_path, registry, queues, *, llm=None, **overrides):
+    from uwagent.service import Service
+
+    settings = Settings(db_path=tmp_path / "svc.db", **overrides)
+    return Service(settings=settings, store=Store(settings.db_path), registry=registry, policy=load_policy(settings.policy_path),
+                   leadgen=FakeLeadgen(queues), mailbox=FakeMailbox(), llm=llm)
