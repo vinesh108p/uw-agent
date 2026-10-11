@@ -13,7 +13,7 @@ services:
       UW_OFFLINE: ${UW_OFFLINE:-0}
       UW_AUTOSEND_DISABLED: ${UW_AUTOSEND_DISABLED:-0}
     ports:
-      - "8090:8090"
+      - "127.0.0.1:8090:8090"
     volumes:
       - ./data:/app/data
     depends_on:

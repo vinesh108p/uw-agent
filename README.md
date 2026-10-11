@@ -50,7 +50,7 @@ make demo
    3. It derives roof and siding class and applies FigJam defaults (PC 9, knob & tube by year built, no pool).
    4. It runs the 12 FigJam pages as decision trees, over the possible values of anything still missing. A lead that declines on every branch asks nothing and goes straight to the underwriter.
 2. **Assessment.** The result: required asks, including follow-on "only if…" questions, plus conditions, underwriter items, the allowed actions, a recommendation and the lead's priority (tier, effective date).
-3. **Underwriter first when needed.** If anything needs the underwriter (judgment calls, playbook conditions, possible declines), they review it before any email goes out. The card shows the planned email and the terms. One click approves, asks the broker an extra question, or declines.
+3. **Underwriter first when needed.** If anything needs the underwriter (certain declines, judgment calls, playbook conditions to approve; a *possible* decline that depends on a missing answer is settled by asking that question in the one email), they review it before any email goes out. The card shows the planned email and the terms. One click approves, asks the broker an extra question, or declines.
 4. **Agent (Claude).** The agent picks exactly one action tool and writes its content. A follow-up is the single email for the round, carrying every ask, the underwriter's question and the terms to expect:
    - `send_followup`
    - `request_uw_decision`
@@ -117,3 +117,23 @@ The engine-side skills are: registry triage, enrichment (stubs), conflict detect
 - Playbook interpretation calls are listed in design §14. Implementation deviations are in §17.
 - Stubbed: all third-party data, rating, bind and issue, broker contact details, and real email.
 - Cut: auth, Postgres, a workflow engine, real web research, attachments, timers, a rule-authoring UI.
+
+## Latest results
+
+Observed on 2026-10-08 against the harness's own leadgen and mailbox services. Reproduce with `make eval` (offline) and `make eval-live` (needs `ANTHROPIC_API_KEY`).
+
+| Gate | Offline (seeds 42, 7: 20 leads) | Live (`claude-opus-5-5`, seed 42: 10 leads) |
+|---|---|---|
+| Emails to leads that should go to the underwriter first | 0 | 0 |
+| Forbidden fields in sent mail | 0 | 0 |
+| Policy violations in sent mail | 0 | 0 |
+| More than one follow-up per lead per round | 0 | 0 |
+| Prompt-injection escapes | 0 | 0 |
+| Gold mismatches (blind seed-42 labels) | 0 | 0 |
+| Red-team combined recall | 0.6 (deterministic checks only) | 1.0, false-positive rate 0.0 |
+
+- Terminal-action accuracy 1.0, ask precision 1.0 and recall 1.0 in both modes; the live agent needed **0 guardrail rejections**.
+- Closed loop after two simulated reply rounds: offline 14 quoted, 5 declined, 1 awaiting the underwriter (8 quotes with no underwriter touch, reply extraction 0.904); live 6 quoted, 3 declined, 1 awaiting (4 with no touch, reply extraction 0.94). Hallucinated values: 0 in both.
+- Morning queue (seed 42): 4 follow-ups sent (one per lead), 6 leads waiting on an underwriter decision (3 decline confirmations, 3 reviews before their one email), Tier 1 leads first.
+- The first live run found a real defect: the code-written subject and closing promised to "finalize your quote", which the policy forbids, so the moderator rejected every agent-written follow-up (14 rejections, 62% false positives on the good red-team emails) and the run silently fell back to templates. Fixed in design §17.12.
+- **Not yet run:** the Docker path (`make up`, `docker compose up --build`), because host processes still held ports 8081 and 8025 when this was written.

@@ -31,6 +31,10 @@ STATE_NOTES = {
 }
 
 
+class NeedsNote(ValueError):
+    """An "ask broker" decision with nothing else to ask needs the underwriter's question."""
+
+
 class Service:
     def __init__(self, *, settings: Settings, store: Store, registry: Registry, policy: Policy, leadgen: Any, mailbox: Any,
                  llm: LLM | None):
@@ -42,10 +46,10 @@ class Service:
         self.mailbox = mailbox
         self.llm = llm
         self.sender = Sender(store, mailbox, settings.from_address)
-        self._locks: defaultdict[str, threading.Lock] = defaultdict(threading.Lock)
+        self._locks: defaultdict[str, threading.RLock] = defaultdict(threading.RLock)
         self._locks_guard = threading.Lock()
 
-    def _lock(self, lead_id: str) -> threading.Lock:
+    def _lock(self, lead_id: str) -> threading.RLock:
         with self._locks_guard:
             return self._locks[lead_id]
 
@@ -72,6 +76,8 @@ class Service:
         with self._lock(lead_id):
             if self.store.get_case(lead_id)["state"] not in ACTIONABLE:
                 return None
+            if self.store.open_card_for(lead_id) is not None:
+                return None  # never act while the underwriter has a decision open
             assessment = self.assess(lead_id)
             self.store.update_case(lead_id, assessment=assessment.to_dict())
             return run_agent(self._context(lead_id, assessment))
@@ -91,27 +97,28 @@ class Service:
         return list(rows[-1]["payload"]["items"]) if rows else []
 
     def receive_reply(self, lead_id: str, body: str) -> RunResult | None:
-        case = self.store.get_case(lead_id)
-        if case is None:
+        if self.store.get_case(lead_id) is None:
             raise KeyError(lead_id)
-        if case["state"] == "DECLINED":
-            raise ValueError(f"{lead_id} is declined; replies are no longer accepted")
-        round_ = case["rounds_sent"]
-        asked = self.last_followup_items(lead_id)
-        extraction = parse_reply(self.llm, self.registry, asked, body)
-        facts, flags = validate_extraction(extraction, self.registry, asked, round_=round_)
-        self.store.add_message_in(lead_id, round_, body, extraction.model_dump())
-        for fact in facts:
-            self.store.add_fact(lead_id, fact)
-        for flag in flags:
-            self.store.add_flag(lead_id, round_, flag)
-        open_card = self.store.open_card_for(lead_id)
-        if open_card is not None:
-            self.store.close_card(open_card["id"], "superseded")
-        self.store.update_case(lead_id, state="ASSESSED")
-        self.store.add_event(lead_id, "reply_received", {"round": round_, "facts": [f.field for f in facts], "flags": flags,
-                                                         "intent": extraction.intent})
-        return self.advance(lead_id)
+        with self._lock(lead_id):  # held for the whole operation: no agent run can interleave
+            case = self.store.get_case(lead_id)
+            if case["state"] == "DECLINED":
+                raise ValueError(f"{lead_id} is declined; replies are no longer accepted")
+            round_ = case["rounds_sent"]
+            asked = self.last_followup_items(lead_id)
+            extraction = parse_reply(self.llm, self.registry, asked, body)
+            facts, flags = validate_extraction(extraction, self.registry, asked, round_=round_)
+            self.store.add_message_in(lead_id, round_, body, extraction.model_dump())
+            for fact in facts:
+                self.store.add_fact(lead_id, fact)
+            for flag in flags:
+                self.store.add_flag(lead_id, round_, flag)
+            open_card = self.store.open_card_for(lead_id)
+            if open_card is not None:
+                self.store.close_card(open_card["id"], "superseded")
+            self.store.update_case(lead_id, state="ASSESSED")
+            self.store.add_event(lead_id, "reply_received", {"round": round_, "facts": [f.field for f in facts], "flags": flags,
+                                                             "intent": extraction.intent})
+            return self.advance(lead_id)
 
     def simulate_replies(self) -> int:
         count = 0
@@ -160,18 +167,19 @@ class Service:
         card = self.store.get_card(card_id)
         if card is None:
             raise KeyError(card_id)
-        if not self.store.close_card(card_id, choice):
-            raise ValueError("this card was already resolved")
+        if choice == "ask_broker" and not note.strip() and not card["payload"].get("asks"):
+            raise NeedsNote("Add a question for the broker: there is nothing else to ask.")
         lead_id = card["lead_id"]
-        self.store.add_decision(card_id, lead_id, card["round"], choice, note, tuple(card["payload"].get("scope", [])))
-        if choice == "approve":
-            self.store.resolve_flags(lead_id)
-        self.store.update_case(lead_id, state="ASSESSED")
-        self.store.add_event(lead_id, "uw_decision", {"card_id": card_id, "choice": choice, "note": note})
-        if choice != "decline":
-            self.advance(lead_id)
-            return
-        with self._lock(lead_id):
+        with self._lock(lead_id):  # held for the whole operation, so a reply or agent run cannot interleave
+            if not self.store.close_card(card_id, choice):
+                raise ValueError("this card was already resolved")
+            self.store.add_decision(card_id, lead_id, card["round"], choice, note, tuple(card["payload"].get("scope", [])))
+            self.store.resolve_flags(lead_id)  # the underwriter has seen them; they must not re-open the next round
+            self.store.update_case(lead_id, state="ASSESSED")
+            self.store.add_event(lead_id, "uw_decision", {"card_id": card_id, "choice": choice, "note": note})
+            if choice != "decline":
+                self.advance(lead_id)
+                return
             assessment = self.assess(lead_id)
             ctx = self._context(lead_id, assessment)
             ctx.use_templates = True  # UW-authored or pre-approved text: deterministic checks only

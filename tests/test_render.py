@@ -10,6 +10,7 @@ def test_one_email_carries_follow_on_questions_and_terms(seed42, registry):
     questions = [(item, template_question(item)) for item in assessment.required_asks]
     subject, body = render_followup(assessment.lead_id, assessment.values, intro="Hi.", questions=questions,
                                     closing="Thanks.", fmt=assessment.followup_format, terms=assessment.terms)
-    assert "6 items needed to finalize your quote" in subject
+    assert "6 items needed to continue your submission" in subject
+    assert "finalize" not in (subject + body).lower() and "we will follow up promptly" in body
     assert 'Only if the answer to "Is the property owned by a trust?" is yes: Name of trust?' in body
-    assert "Terms to expect on the quote:\n- Personal liability coverage is excluded" in body
+    assert "Terms that would apply to a quote:\n- Personal liability coverage is excluded" in body

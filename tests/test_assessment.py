@@ -35,3 +35,20 @@ def test_uw_review_then_one_email_with_terms_then_quote(seed42, registry):
         "electrical_panel_brand": "Square D", "dist_to_nearest_fire_hydrant": 300}.items()]
     quote = build_assessment(lead, registry, extra_facts=answers, decision=approval, round_=1)
     assert quote.allowed_actions == ["mark_quote_ready"]  # same scope as approved: no second UW click
+
+
+def test_ask_broker_without_a_question_cannot_quote_a_decline_lead(seed42, registry):
+    base = seed42["LEAD-00000042-009"]
+    complete = base.model_copy(update={"fields": {**base.fields, "acreage": 0.5, "foundation_type": "Piers",
+                                                  "post_pier_supports_living_area": True, "deck_height_ft": 6}})
+    assessment = build_assessment(complete, registry, decision=UWDecision("ask_broker", round=0))
+    assert assessment.allowed_actions == ["request_uw_decision"]
+
+
+def test_review_only_leads_recommend_approve(seed42, registry):
+    assert build_assessment(seed42["LEAD-00000042-007"], registry).allowed_recommendations == ["approve"]
+
+
+def test_the_card_shows_the_asks_that_would_be_sent(seed42, registry):
+    assessment = build_assessment(seed42["LEAD-00000042-006"], registry)
+    assert assessment.required_asks == [] and len(assessment.released_asks) > 10

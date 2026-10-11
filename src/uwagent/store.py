@@ -146,8 +146,8 @@ class Store:
                 "idempotency_key": row["idempotency_key"], "payload": json.loads(row["payload_json"]), "status": row["status"],
                 "mailbox_id": row["mailbox_id"], "error": row["error"]}
 
-    def enqueue_outbox(self, lead_id: str, kind: str, round_: int, payload: dict[str, Any]) -> dict[str, Any]:
-        key = f"{self.instance_id}:{lead_id}:{kind}:{round_}"
+    def enqueue_outbox(self, lead_id: str, kind: str, round_: int, payload: dict[str, Any], revision: int = 0) -> dict[str, Any]:
+        key = f"{self.instance_id}:{lead_id}:{kind}:{round_}" + (f":r{revision}" if revision else "")
         with self._lock:
             self._conn.execute("INSERT OR IGNORE INTO outbox (lead_id, kind, round, idempotency_key, payload_json, status, created_at) "
                                "VALUES (?, ?, ?, ?, ?, 'pending', ?)", (lead_id, kind, round_, key, _dump(payload), _now()))

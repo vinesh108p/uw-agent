@@ -15,7 +15,7 @@
   {% if p.knockouts %}<ul>{% for k in p.knockouts %}<li>{{ k }}</li>{% endfor %}</ul>{% endif %}
   {% if p.uw_items %}<ul>{% for u in p.uw_items %}<li><strong>{{ u.title }}:</strong> {{ u.detail }}</li>{% endfor %}</ul>{% endif %}
   {% if p.asks %}<p class="muted">Email after approval (one message): {{ p.asks|length }} item(s): {{ p.asks|join(", ") }}</p>{% endif %}
-  {% if p.terms %}<p class="muted">Terms to expect on the quote:</p>
+  {% if p.terms %}<p class="muted">Terms that would apply to a quote:</p>
     <ul>{% for x in p.terms %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
   <form method="post" action="/cards/{{ c.card.id }}">
     <label class="muted">Decline notice (sent only if you choose Decline; edit freely)</label>

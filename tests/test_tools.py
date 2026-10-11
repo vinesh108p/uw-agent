@@ -21,3 +21,13 @@ def test_request_uw_decision_creates_a_card_with_the_planned_email(seed42, regis
     assert payload["recommendation"] == "approve" and payload["scope"] == ["condition:exclude_liability"]
     assert len(payload["asks"]) == 6 and payload["terms"] == ["Personal liability coverage is excluded"]
     assert mailbox.sent == []
+
+
+def test_a_revised_quote_is_delivered(seed42, registry, tmp_path):
+    from uwagent.facts import Fact
+
+    ctx, mailbox = make_context(seed42["LEAD-00000042-009"], registry, tmp_path, extra_facts=[Fact("acreage", 0.5, "reply", "reply r1")])
+    ctx.use_templates = True
+    note = {"cover_note": "Thank you for the complete information. We are ready to quote this property on the terms below."}
+    assert handle_tool("mark_quote_ready", note, ctx).ok and handle_tool("mark_quote_ready", note, ctx).ok
+    assert len(mailbox.sent) == 2

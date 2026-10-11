@@ -33,7 +33,7 @@ def _plural(count: int, word: str) -> str:
 
 def render_followup(lead_id: str, values: Mapping[str, Any], *, intro: str, questions: list[tuple[AskItem, str]],
                     closing: str, fmt: str, terms: Sequence[str] = ()) -> tuple[str, str]:
-    subject = f"[{lead_id}] {address(values)}: {_plural(len(questions), 'item')} needed to finalize your quote"
+    subject = f"[{lead_id}] {address(values)}: {_plural(len(questions), 'item')} needed to continue your submission"
     lines = [intro.strip(), ""]
     if fmt == "incomplete_submission":
         lines.append("To complete underwriting, please complete or confirm these parts of the application:")
@@ -47,8 +47,9 @@ def render_followup(lead_id: str, values: Mapping[str, Any], *, intro: str, ques
             if item.kind == "missing" and item.options:
                 lines.append(f"   Options: {', '.join(item.options)}")
     if terms:
-        lines += ["", "Terms to expect on the quote:"] + [f"- {term}" for term in terms]
-    lines += ["", "You can reply directly to this email; a numbered list of answers is perfect.", "", closing.strip(), "", SIGNATURE]
+        lines += ["", "Terms that would apply to a quote:"] + [f"- {term}" for term in terms]
+    lines += ["", "You can reply directly to this email; a numbered list of answers is perfect.",
+              "Once we receive your answers, we will follow up promptly.", "", closing.strip(), "", SIGNATURE]
     return subject, "\n".join(lines)
 
 
@@ -80,9 +81,9 @@ def template_question(item: AskItem) -> str:
 
 def template_followup_args(a: Assessment) -> dict[str, Any]:
     return {
-        "intro": "Thank you for sending this submission. To finalize the quote we need a few more details.",
+        "intro": "Thank you for sending this submission. To move your submission forward we need a few more details.",
         "items": [{"key": item.key, "question": template_question(item)} for item in a.required_asks],
-        "closing": "Once we have these, we will finalize the quote promptly.",
+        "closing": "Thank you for your help.",
         "format": a.followup_format,
     }
 

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .assessment import UW_CHOICES
-from .service import Service
+from .service import NeedsNote, Service
 
 TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
@@ -48,6 +48,8 @@ def create_app(service: Service) -> FastAPI:
             raise HTTPException(400, f"choice must be one of {UW_CHOICES}")
         try:
             service.resolve_card(card_id, choice, note=note, message=message or None)
+        except NeedsNote as exc:
+            raise HTTPException(400, str(exc))
         except KeyError:
             raise HTTPException(404, "unknown card")
         except ValueError as exc:

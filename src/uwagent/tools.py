@@ -71,8 +71,8 @@ class Sender:
         self.mailbox = mailbox
         self.from_address = from_address
 
-    def send(self, lead_id: str, kind: str, round_: int, payload: dict[str, Any]) -> dict[str, Any]:
-        row = self.store.enqueue_outbox(lead_id, kind, round_, payload)
+    def send(self, lead_id: str, kind: str, round_: int, payload: dict[str, Any], revision: int = 0) -> dict[str, Any]:
+        row = self.store.enqueue_outbox(lead_id, kind, round_, payload, revision)
         if row["status"] != "sent":
             self._deliver(row)
         return self.store.get_outbox(row["id"])
@@ -192,7 +192,7 @@ def _request_uw_decision(args: dict[str, Any], ctx: ToolContext) -> ToolResult:
     payload = {"summary": args["summary"].strip(), "recommendation": args["recommendation"], "rationale": args["rationale"].strip(),
                "decline_message": message, "uw_items": [asdict(u) for u in a.uw_items],
                "knockouts": [o.detail for o in a.knockouts], "conditions": [o.detail for o in a.conditions],
-               "asks": [item.label for item in a.required_asks], "terms": a.terms, "scope": a.scope,
+               "asks": [item.label for item in a.released_asks], "terms": a.terms, "scope": a.scope,
                "allowed_choices": list(UW_CHOICES)}
     card_id = ctx.store.create_card(ctx.lead.lead_id, ctx.case["rounds_sent"], payload)
     ctx.store.update_case(ctx.lead.lead_id, state="AWAITING_UW")
@@ -213,8 +213,9 @@ def _mark_quote_ready(args: dict[str, Any], ctx: ToolContext) -> ToolResult:
         return _reject(verdict)
     ctx.store.save_quote(ctx.lead.lead_id, {"conditions": conditions, "subjectivities": a.subjectivities,
                                             "approved_by_uw": a.decision is not None and a.decision.choice == "approve"})
+    revision = sum(1 for row in ctx.store.outbox_for(ctx.lead.lead_id) if row["kind"] == "quote")  # a re-quote is a new message
     ctx.sender.send(ctx.lead.lead_id, "quote", ctx.case["rounds_sent"],
-                    {"to": a.recipient, "subject": subject, "body": body, "policy_version": ctx.policy.version})
+                    {"to": a.recipient, "subject": subject, "body": body, "policy_version": ctx.policy.version}, revision)
     ctx.store.update_case(ctx.lead.lead_id, state="QUOTED")
     ctx.store.add_event(ctx.lead.lead_id, "quoted", {"conditions": conditions})
     return ToolResult("Quote sent.", ok=True)
@@ -267,7 +268,7 @@ def escalate_to_uw(ctx: ToolContext, why: str) -> int:
     payload = {"summary": f"Automatic action could not pass the guardrails: {why}", "recommendation": None,
                "rationale": "Escalated by the runner.", "decline_message": "", "uw_items": [asdict(u) for u in a.uw_items],
                "knockouts": [o.detail for o in a.knockouts], "conditions": [o.detail for o in a.conditions],
-               "asks": [item.label for item in a.required_asks], "terms": a.terms, "scope": a.scope,
+               "asks": [item.label for item in a.released_asks], "terms": a.terms, "scope": a.scope,
                "allowed_choices": list(UW_CHOICES)}
     card_id = ctx.store.create_card(ctx.lead.lead_id, ctx.case["rounds_sent"], payload)
     ctx.store.update_case(ctx.lead.lead_id, state="AWAITING_UW")

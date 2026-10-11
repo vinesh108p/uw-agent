@@ -46,6 +46,7 @@ class Assessment:
     results: list[TreeResult]
     knockouts: list[Outcome]
     required_asks: list[AskItem]
+    released_asks: list[AskItem]
     optional_asks: list[AskItem]
     deferred: list[str]
     conditions: list[Outcome]
@@ -105,6 +106,7 @@ class Assessment:
             ],
             "knockouts": [_outcome(o) for o in self.knockouts],
             "required_asks": [asdict(a) for a in self.required_asks],
+            "released_asks": [asdict(a) for a in self.released_asks],
             "optional_asks": [asdict(a) for a in self.optional_asks],
             "deferred": self.deferred,
             "conditions": [_outcome(o) for o in self.conditions],
@@ -160,7 +162,7 @@ def _recommend(allowed: list[str], knockouts: list[Outcome], conflicts: list[Con
     if blocks_external:
         return "ask_broker", ["approve", "ask_broker", "decline"]
     if needs_review:
-        return "approve", ["approve", "ask_broker"]
+        return "approve", ["approve"]
     return "ask_broker", ["ask_broker"]  # kill switch: the UW releases the email
 
 
@@ -250,6 +252,7 @@ def build_assessment(lead: Lead, registry: Registry, *, extra_facts: Sequence[Fa
     if approved:
         uw_items = []
     active_knockouts = [] if approved else knockouts
+    released = list(required.values())  # what one email would ask if the underwriter releases it
     if active_knockouts and not asked_by_uw:
         required, optional = {}, []
     blocks_external = bool(active_knockouts or any(u.may_decline for u in uw_items)) and not asked_by_uw
@@ -259,6 +262,8 @@ def build_assessment(lead: Lead, registry: Registry, *, extra_facts: Sequence[Fa
         allowed = ["send_decline_notice"]
     elif blocks_external or needs_review:
         allowed = ["request_uw_decision"]  # the UW weighs in before the one email goes out
+    elif asked_by_uw and not required:
+        allowed = ["request_uw_decision"]  # an "ask broker" click with nothing to ask must never become a quote
     elif required:
         allowed = ["send_followup"] if (autosend_enabled or asked_by_uw or approved) else ["request_uw_decision"]
     else:
@@ -274,7 +279,7 @@ def build_assessment(lead: Lead, registry: Registry, *, extra_facts: Sequence[Fa
 
     return Assessment(
         lead_id=lead.lead_id, round=round_, tier=_tier(values), effective_date=str(values.get("effective_date") or ""),
-        facts=facts.provenance(), results=results, knockouts=knockouts, required_asks=list(required.values()),
+        facts=facts.provenance(), results=results, knockouts=knockouts, required_asks=list(required.values()), released_asks=released,
         optional_asks=optional, deferred=deferred, conditions=conditions, advisories=advisories, uw_items=uw_items,
         conflicts=conflicts, system_gaps=gaps, subjectivities=subjectivities, scope=scope, blocks_external=blocks_external,
         allowed_actions=allowed, recommendation=recommendation, allowed_recommendations=allowed_recommendations,

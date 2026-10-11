@@ -6,7 +6,7 @@ import json
 from dataclasses import asdict, dataclass
 from typing import Any, Callable
 
-from .assessment import AskItem, Assessment
+from .assessment import AskItem, Assessment, UWItem
 from .render import (
     DEFAULT_DECLINE_REASON, PUBLIC_DECLINE_REASONS, address, template_decline_message, template_followup_args,
     template_quote_args, template_uw_args,
@@ -25,7 +25,8 @@ Finish the run by calling exactly ONE action tool from "allowed_actions":
   "required_items" (you may add "optional_items"). Write a short, warm, professional intro (one or two sentences, mention the
   property), one clear plain-language question per item, and a short closing. For "confirm" items, say what we have on file and ask
   them to confirm or correct it. For "conditional" items, keep the "Only if ..." condition in the question. If an underwriter question
-  is present, include it. Code appends the terms to expect on the quote. Use the "followup_format" given.
+  is present, include it. Code appends the terms that would apply to a quote and the next-step line. Never say or imply that a quote or approval will
+  follow, and never promise timing. Use the "followup_format" given.
 - request_uw_decision: brief the underwriter in two to four sentences (what is going on and why), recommend one of
   "allowed_recommendations" (prefer "engine_recommendation" unless the facts clearly support another allowed option), give a
   one-sentence rationale, and when recommending decline write a courteous decline_message for the broker using only
@@ -61,6 +62,14 @@ def _item(item: AskItem) -> dict[str, Any]:
             "current_value": item.current_value, "note": item.note}
 
 
+def _agent_safe(item: UWItem) -> dict[str, Any]:
+    """Reply-derived items carry broker text: the acting agent only learns that one exists; the underwriter sees the text."""
+    data = asdict(item)
+    if item.key.startswith("reply_flag_"):
+        data["detail"] = "A broker reply needs underwriter review; the details are shown to the underwriter only."
+    return data
+
+
 def build_case_prompt(ctx: ToolContext) -> str:
     a = ctx.assessment
     data = {
@@ -75,7 +84,7 @@ def build_case_prompt(ctx: ToolContext) -> str:
         "optional_items": [_item(i) for i in a.optional_asks],
         "terms_to_expect": a.terms,
         "subjectivities": a.subjectivities,
-        "underwriter_items": [asdict(u) for u in a.uw_items],
+        "underwriter_items": [_agent_safe(u) for u in a.uw_items],
         "knockouts": [{"tree": o.tree, "detail": o.detail} for o in a.knockouts],
         "public_decline_reasons": sorted({PUBLIC_DECLINE_REASONS.get(o.tree, DEFAULT_DECLINE_REASON) for o in a.knockouts}),
         "engine_recommendation": a.recommendation,

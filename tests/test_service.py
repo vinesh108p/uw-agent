@@ -38,7 +38,7 @@ def test_uw_approval_sends_one_consolidated_email(service):
     service.resolve_card(service.store.open_card_for(lead_id)["id"], "approve")
     [email] = service.mailbox.emails_for_lead(lead_id)
     assert set(email["metadata"]["items"]) == set(GOLD[lead_id]["must_ask"])
-    assert "Terms to expect on the quote:" in email["body"] and "Personal liability coverage is excluded" in email["body"]
+    assert "Terms that would apply to a quote:" in email["body"] and "Personal liability coverage is excluded" in email["body"]
 
 from uwagent.simulator import simulate_reply
 
@@ -55,3 +55,35 @@ def test_every_lead_with_asks_gets_exactly_one_email_before_its_outcome(service,
         service.receive_reply(lead_id, body)
         assert [e["metadata"]["kind"] for e in service.mailbox.emails_for_lead(lead_id)].count("followup") == 1
     assert {service.store.get_case(lid)["state"] for lid in waiting} <= {"QUOTED", "AWAITING_UW"}
+
+
+def test_ask_broker_needs_a_question_when_there_is_nothing_to_ask(tmp_path, registry):
+    from uwagent.service import NeedsNote
+
+    queue = load_queue(42)
+    assert queue[9]["lead"]["lead_id"] == "LEAD-00000042-009"
+    queue[9]["lead"]["fields"].update({"acreage": 0.5, "foundation_type": "Piers", "post_pier_supports_living_area": True,
+                                       "deck_height_ft": 6})
+    svc = make_service(tmp_path, registry, {42: queue})
+    svc.ingest_queue(seed=42)
+    svc.advance_all()
+    card = svc.store.open_card_for("LEAD-00000042-009")
+    with pytest.raises(NeedsNote):
+        svc.resolve_card(card["id"], "ask_broker")
+    assert svc.mailbox.emails_for_lead("LEAD-00000042-009") == []
+
+
+def test_any_uw_decision_resolves_reply_flags(service):
+    service.advance_all()
+    lead_id = "LEAD-00000042-002"
+    service.store.add_flag(lead_id, 0, "Broker reply needs review (negotiation): too strict")
+    service.resolve_card(service.store.open_card_for(lead_id)["id"], "ask_broker", note="Is the home occupied year-round?")
+    assert service.store.open_flags(lead_id) == []
+
+
+def test_advance_does_nothing_while_a_card_is_open(service):
+    service.advance_all()
+    lead_id = "LEAD-00000042-000"
+    service.store.update_case(lead_id, state="ASSESSED")
+    assert service.advance(lead_id) is None
+    assert [c["lead_id"] for c in service.store.list_open_cards()].count(lead_id) == 1
