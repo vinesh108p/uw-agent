@@ -7,3 +7,12 @@ from uwagent.registry import Registry
 @pytest.fixture(scope="session")
 def registry() -> Registry:
     return Registry.load(ROOT / "sim-harness" / "shared" / "field_registry.json")
+
+from uwagent.models import Lead
+
+from tests.support import load_queue
+
+
+@pytest.fixture(scope="session")
+def seed42() -> dict[str, Lead]:
+    return {item["lead"]["lead_id"]: Lead.model_validate(item["lead"]) for item in load_queue(42)}

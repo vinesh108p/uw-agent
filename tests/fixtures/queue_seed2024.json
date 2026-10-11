@@ -1,0 +1,2081 @@
+[
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-000",
+      "received_at": "2026-06-29T05:18:00Z",
+      "source": "direct_web",
+      "fields": {
+        "street_address": null,
+        "city": "Flagstaff",
+        "county": "Coconino",
+        "state": null,
+        "zip": null,
+        "broker_tier": null,
+        "has_primary_policy_with_stand": false,
+        "listed_for_sale": false,
+        "first_name": "Dana",
+        "last_name": null,
+        "residence_held_in_trust": true,
+        "trust_name": "The Calloway Family Trust",
+        "owner_email": "owner@example.com",
+        "owner_phone_number": "+1-555-0188",
+        "insured_dob": null,
+        "occupation": null,
+        "number_of_residents": 4,
+        "kyc_score": null,
+        "effective_date": "2026-07-28",
+        "coverage_a": null,
+        "coverage_e": null,
+        "coverage_f": "3000",
+        "replacement_cost": null,
+        "dwelling_type": null,
+        "dwelling_use_type": "Primary",
+        "is_rental": null,
+        "months_unoccupied": 0,
+        "year_built": null,
+        "property_purchase_date": "2009-06-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": null,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": null,
+        "acreage": null,
+        "has_animals": null,
+        "structure_type": "Single Family",
+        "construction_type": null,
+        "siding_material": "Wood Shake / Shingle",
+        "foundation_type": null,
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": null,
+        "num_stories": null,
+        "roof_replacement_year": 2031,
+        "roof_material": null,
+        "roof_shape": "Hip",
+        "heating_source": null,
+        "has_knob_and_tube_wiring": null,
+        "electrical_panel_brand": "Siemens",
+        "electrical_panel_size_amps": 150,
+        "plumbing_age_years": 16,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Local Alarm",
+        "distance_to_fire_department": 1.4,
+        "fire_department_type": "Career",
+        "dist_to_nearest_fire_hydrant": 69,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 13,
+        "is_7a_compliant": false,
+        "slope_angle_deg": 30.5,
+        "roof_classification": null,
+        "p_f": 0.63,
+        "siding_classification": "D",
+        "vegetation_clearance": "Too Close"
+      }
+    },
+    "debug": {
+      "difficulty": "hard",
+      "injected_archetypes": [
+        "trust_llc",
+        "wildfire_severe"
+      ],
+      "perturbations": [
+        {
+          "field": "residence_held_in_trust",
+          "kind": "archetype_set",
+          "detail": "property held in trust"
+        },
+        {
+          "field": "trust_name",
+          "kind": "archetype_set",
+          "detail": "named trust; screen for unacceptable exposure"
+        },
+        {
+          "field": "roof_material",
+          "kind": "archetype_null",
+          "detail": "roof material unknown; ask producer (blocks roof class)"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "archetype_null",
+          "detail": "derivedFrom roof_material; can't derive yet"
+        },
+        {
+          "field": "siding_material",
+          "kind": "archetype_set",
+          "detail": "combustible siding"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "archetype_set",
+          "detail": "worst siding fire class"
+        },
+        {
+          "field": "p_f",
+          "kind": "archetype_set",
+          "detail": "high probability of failure"
+        },
+        {
+          "field": "min_distance_to_neighbor_ft",
+          "kind": "archetype_set",
+          "detail": "homes very close together"
+        },
+        {
+          "field": "is_7a_compliant",
+          "kind": "archetype_set",
+          "detail": "not Chapter 7A compliant"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "archetype_set",
+          "detail": "steep slope"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "archetype_set",
+          "detail": "inadequate defensible space"
+        },
+        {
+          "field": "street_address",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "state",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "zip",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "last_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "insured_dob",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "occupation",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "kyc_score",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_e",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "dwelling_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "is_rental",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "year_built",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "pool_has_diving_board_or_slide",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "is_gated_community",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "acreage",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_animals",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "construction_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "foundation_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "square_feet",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "num_stories",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_replacement_year",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "heating_source",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_knob_and_tube_wiring",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_replacement_year",
+          "kind": "conflict",
+          "detail": "roof replacement year in the future"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-001",
+      "received_at": "2026-06-29T07:01:00Z",
+      "source": "agent_portal",
+      "fields": {
+        "street_address": "9667 Meadowlark Ln",
+        "city": "Naples",
+        "county": "Collier",
+        "state": "FL",
+        "zip": "34102",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": false,
+        "first_name": null,
+        "last_name": "Okafor",
+        "residence_held_in_trust": null,
+        "trust_name": null,
+        "owner_email": null,
+        "owner_phone_number": "+1-555-0179",
+        "insured_dob": "1961-09-10",
+        "occupation": null,
+        "number_of_residents": 1,
+        "kyc_score": 2,
+        "effective_date": "2026-08-09",
+        "coverage_a": null,
+        "coverage_e": "500000",
+        "coverage_f": "3000",
+        "replacement_cost": 1140083,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": "Primary",
+        "is_rental": "No",
+        "months_unoccupied": 0,
+        "year_built": 1996,
+        "property_purchase_date": "2013-01-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": null,
+        "has_animals": true,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": "Stucco",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 3900,
+        "num_stories": 1,
+        "roof_replacement_year": 2019,
+        "roof_material": "Asphalt Fiberglass Composite",
+        "roof_shape": "Gable",
+        "heating_source": "Central Gas",
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": "Eaton",
+        "electrical_panel_size_amps": 200,
+        "plumbing_age_years": 8,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Central Alarm",
+        "distance_to_fire_department": 1.9,
+        "fire_department_type": "Mostly Career",
+        "dist_to_nearest_fire_hydrant": 499,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": "5",
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 47,
+        "is_7a_compliant": true,
+        "slope_angle_deg": 5.4,
+        "roof_classification": "Class A",
+        "p_f": 0.18,
+        "siding_classification": "B",
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "easy",
+      "injected_archetypes": [],
+      "perturbations": [
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "first_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "residence_held_in_trust",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "owner_email",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "occupation",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "acreage",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-002",
+      "received_at": "2026-06-29T07:05:00Z",
+      "source": "direct_web",
+      "fields": {
+        "street_address": "9490 Hillside Ct",
+        "city": "Asheville",
+        "county": "Buncombe",
+        "state": "NC",
+        "zip": "28801",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": false,
+        "first_name": "Miguel",
+        "last_name": "Bauer",
+        "residence_held_in_trust": true,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": "+1-555-0170",
+        "insured_dob": "1973-05-28",
+        "occupation": "Software Engineer",
+        "number_of_residents": null,
+        "kyc_score": null,
+        "effective_date": "2026-07-31",
+        "coverage_a": 575000,
+        "coverage_e": "300000",
+        "coverage_f": null,
+        "replacement_cost": null,
+        "dwelling_type": null,
+        "dwelling_use_type": "Primary",
+        "is_rental": "No",
+        "months_unoccupied": 0,
+        "year_built": null,
+        "property_purchase_date": "2021-04-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": 0.67,
+        "has_animals": null,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": null,
+        "foundation_type": null,
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 2300,
+        "num_stories": null,
+        "roof_replacement_year": null,
+        "roof_material": "Asphalt Fiberglass Composite",
+        "roof_shape": "Hip",
+        "heating_source": null,
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": null,
+        "electrical_panel_size_amps": 30,
+        "plumbing_age_years": 9,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Central Alarm",
+        "distance_to_fire_department": null,
+        "fire_department_type": null,
+        "dist_to_nearest_fire_hydrant": null,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": null,
+        "is_7a_compliant": true,
+        "slope_angle_deg": null,
+        "roof_classification": null,
+        "p_f": null,
+        "siding_classification": null,
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "hard",
+      "injected_archetypes": [
+        "trust_llc"
+      ],
+      "perturbations": [
+        {
+          "field": "residence_held_in_trust",
+          "kind": "archetype_set",
+          "detail": "property held in trust"
+        },
+        {
+          "field": "trust_name",
+          "kind": "archetype_null",
+          "detail": "trust name required when held in trust; ask producer"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "number_of_residents",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "kyc_score",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_f",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "dwelling_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "year_built",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_animals",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_material",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_derived",
+          "detail": "derivedFrom siding_material; nulled with source"
+        },
+        {
+          "field": "foundation_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "num_stories",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_replacement_year",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "heating_source",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "electrical_panel_brand",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "electrical_panel_size_amps",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "distance_to_fire_department",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "fire_department_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "dist_to_nearest_fire_hydrant",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "min_distance_to_neighbor_ft",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "p_f",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "electrical_panel_size_amps",
+          "kind": "conflict",
+          "detail": "implausibly small electrical service"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-003",
+      "received_at": "2026-06-29T06:07:00Z",
+      "source": "agent_portal",
+      "fields": {
+        "street_address": null,
+        "city": "Boulder",
+        "county": "Boulder",
+        "state": null,
+        "zip": "80302",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": false,
+        "listed_for_sale": false,
+        "first_name": "R.",
+        "last_name": null,
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": null,
+        "insured_dob": "1988-07-11",
+        "occupation": "Retired",
+        "number_of_residents": 2,
+        "kyc_score": null,
+        "effective_date": null,
+        "coverage_a": null,
+        "coverage_e": null,
+        "coverage_f": "3000",
+        "replacement_cost": null,
+        "dwelling_type": null,
+        "dwelling_use_type": "Primary",
+        "is_rental": null,
+        "months_unoccupied": null,
+        "year_built": null,
+        "property_purchase_date": "2023-08-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": null,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": 2.28,
+        "has_animals": false,
+        "structure_type": null,
+        "construction_type": "Frame",
+        "siding_material": "Stucco",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 3300,
+        "num_stories": null,
+        "roof_replacement_year": 2012,
+        "roof_material": null,
+        "roof_shape": null,
+        "heating_source": null,
+        "has_knob_and_tube_wiring": null,
+        "electrical_panel_brand": null,
+        "electrical_panel_size_amps": 200,
+        "plumbing_age_years": 19,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": null,
+        "distance_to_fire_department": 13.6,
+        "fire_department_type": "Volunteer",
+        "dist_to_nearest_fire_hydrant": 7089,
+        "opening_protection": null,
+        "road_access": "Limited / Dead-end / No Turnaround",
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 114,
+        "is_7a_compliant": true,
+        "slope_angle_deg": null,
+        "roof_classification": null,
+        "p_f": null,
+        "siding_classification": null,
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "hard",
+      "injected_archetypes": [
+        "pc_9_10_rural"
+      ],
+      "perturbations": [
+        {
+          "field": "distance_to_fire_department",
+          "kind": "archetype_set",
+          "detail": "far from fire dept"
+        },
+        {
+          "field": "fire_department_type",
+          "kind": "archetype_set",
+          "detail": "volunteer department"
+        },
+        {
+          "field": "dist_to_nearest_fire_hydrant",
+          "kind": "archetype_set",
+          "detail": "no nearby hydrant"
+        },
+        {
+          "field": "protection_class",
+          "kind": "archetype_null",
+          "detail": "PPC unknown; assume 9 (system-owned)"
+        },
+        {
+          "field": "road_access",
+          "kind": "archetype_set",
+          "detail": "poor road access"
+        },
+        {
+          "field": "fire_dept_response_time",
+          "kind": "archetype_null",
+          "detail": "required when PC 9/10; ask producer"
+        },
+        {
+          "field": "street_address",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "state",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "last_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "owner_phone_number",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "kyc_score",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "effective_date",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_e",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "dwelling_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "is_rental",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "months_unoccupied",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "year_built",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "pool_has_diving_board_or_slide",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "structure_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "num_stories",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_material",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_derived",
+          "detail": "derivedFrom roof_material; nulled with source"
+        },
+        {
+          "field": "roof_shape",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "heating_source",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_knob_and_tube_wiring",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "electrical_panel_brand",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "fire_alarm",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "p_f",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-004",
+      "received_at": "2026-06-29T05:58:00Z",
+      "source": "agent_portal",
+      "fields": {
+        "street_address": "8236 Lakeview Blvd",
+        "city": null,
+        "county": "Boulder",
+        "state": "CO",
+        "zip": "80302",
+        "broker_tier": "Tier 1",
+        "has_primary_policy_with_stand": false,
+        "listed_for_sale": null,
+        "first_name": "R.",
+        "last_name": null,
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": "+1-555-0184",
+        "insured_dob": "1995-09-12",
+        "occupation": "Software Engineer",
+        "number_of_residents": 1,
+        "kyc_score": 3,
+        "effective_date": "2026-08-09",
+        "coverage_a": null,
+        "coverage_e": "300000",
+        "coverage_f": "1000",
+        "replacement_cost": null,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": "Primary",
+        "is_rental": "No",
+        "months_unoccupied": 0,
+        "year_built": null,
+        "property_purchase_date": "2020-08-15",
+        "pool_type": null,
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": null,
+        "has_animals": null,
+        "structure_type": null,
+        "construction_type": "Frame",
+        "siding_material": "Wood Shake / Shingle",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 3700,
+        "num_stories": 2,
+        "roof_replacement_year": 2020,
+        "roof_material": null,
+        "roof_shape": "Hip",
+        "heating_source": "Central Gas",
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": "GE",
+        "electrical_panel_size_amps": 200,
+        "plumbing_age_years": 6,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Local Alarm",
+        "distance_to_fire_department": 1.6,
+        "fire_department_type": "Mostly Career",
+        "dist_to_nearest_fire_hydrant": 217,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 9,
+        "is_7a_compliant": false,
+        "slope_angle_deg": 38.4,
+        "roof_classification": null,
+        "p_f": 0.89,
+        "siding_classification": "D",
+        "vegetation_clearance": "Too Close"
+      }
+    },
+    "debug": {
+      "difficulty": "medium",
+      "injected_archetypes": [
+        "wildfire_severe"
+      ],
+      "perturbations": [
+        {
+          "field": "roof_material",
+          "kind": "archetype_null",
+          "detail": "roof material unknown; ask producer (blocks roof class)"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "archetype_null",
+          "detail": "derivedFrom roof_material; can't derive yet"
+        },
+        {
+          "field": "siding_material",
+          "kind": "archetype_set",
+          "detail": "combustible siding"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "archetype_set",
+          "detail": "worst siding fire class"
+        },
+        {
+          "field": "p_f",
+          "kind": "archetype_set",
+          "detail": "high probability of failure"
+        },
+        {
+          "field": "min_distance_to_neighbor_ft",
+          "kind": "archetype_set",
+          "detail": "homes very close together"
+        },
+        {
+          "field": "is_7a_compliant",
+          "kind": "archetype_set",
+          "detail": "not Chapter 7A compliant"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "archetype_set",
+          "detail": "steep slope"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "archetype_set",
+          "detail": "inadequate defensible space"
+        },
+        {
+          "field": "city",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "listed_for_sale",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "last_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "year_built",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "pool_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "acreage",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_animals",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "structure_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-005",
+      "received_at": "2026-06-29T07:51:00Z",
+      "source": "broker_email",
+      "fields": {
+        "street_address": "4023 Hillside Ct",
+        "city": "Flagstaff",
+        "county": "Coconino",
+        "state": "AZ",
+        "zip": "86001",
+        "broker_tier": "Tier 2",
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": false,
+        "first_name": "Miguel",
+        "last_name": "Ahn",
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": null,
+        "insured_dob": "1983-02-18",
+        "occupation": "Physician",
+        "number_of_residents": 3,
+        "kyc_score": 2,
+        "effective_date": "2026-07-26",
+        "coverage_a": 600000,
+        "coverage_e": "100000",
+        "coverage_f": null,
+        "replacement_cost": 629995,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": "Primary",
+        "is_rental": null,
+        "months_unoccupied": 0,
+        "year_built": 2008,
+        "property_purchase_date": "2007-06-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": null,
+        "acreage": 1.28,
+        "has_animals": false,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": "Cement Fiber",
+        "foundation_type": null,
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": null,
+        "num_stories": 1,
+        "roof_replacement_year": 2022,
+        "roof_material": null,
+        "roof_shape": "Hip",
+        "heating_source": "Central Gas",
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": "Square D",
+        "electrical_panel_size_amps": null,
+        "plumbing_age_years": null,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Central Alarm",
+        "distance_to_fire_department": 3.8,
+        "fire_department_type": "Mostly Career",
+        "dist_to_nearest_fire_hydrant": 380,
+        "opening_protection": null,
+        "road_access": "Multiple Access Points",
+        "protection_class": "5",
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": null,
+        "is_7a_compliant": true,
+        "slope_angle_deg": null,
+        "roof_classification": null,
+        "p_f": 0.11,
+        "siding_classification": null,
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "medium",
+      "injected_archetypes": [],
+      "perturbations": [
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "owner_phone_number",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "coverage_f",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "is_rental",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "is_gated_community",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "foundation_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "square_feet",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_material",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_derived",
+          "detail": "derivedFrom roof_material; nulled with source"
+        },
+        {
+          "field": "electrical_panel_size_amps",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "plumbing_age_years",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "min_distance_to_neighbor_ft",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-006",
+      "received_at": "2026-06-29T06:22:00Z",
+      "source": "agent_portal",
+      "fields": {
+        "street_address": "1873 Meadowlark Ln",
+        "city": "Santa Rosa",
+        "county": "Sonoma",
+        "state": "CA",
+        "zip": "95404",
+        "broker_tier": "Tier 1",
+        "has_primary_policy_with_stand": false,
+        "listed_for_sale": false,
+        "first_name": "Dana",
+        "last_name": "Okafor",
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": "+1-555-0115",
+        "insured_dob": "1961-06-10",
+        "occupation": "Contractor",
+        "number_of_residents": null,
+        "kyc_score": 2,
+        "effective_date": "2026-08-13",
+        "coverage_a": 650000,
+        "coverage_e": "500000",
+        "coverage_f": "5000",
+        "replacement_cost": 662383,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": null,
+        "is_rental": "No",
+        "months_unoccupied": 0,
+        "year_built": 2018,
+        "property_purchase_date": "2020-04-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": 0.13,
+        "has_animals": false,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": "Stucco",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 3800,
+        "num_stories": 2,
+        "roof_replacement_year": 2016,
+        "roof_material": "Asphalt Fiberglass Composite",
+        "roof_shape": "Hip",
+        "heating_source": "Central Gas",
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": "Square D",
+        "electrical_panel_size_amps": 150,
+        "plumbing_age_years": 19,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": "Central Alarm",
+        "distance_to_fire_department": 2.2,
+        "fire_department_type": "Mostly Career",
+        "dist_to_nearest_fire_hydrant": 254,
+        "opening_protection": null,
+        "road_access": "Multiple Access Points",
+        "protection_class": "4",
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 39,
+        "is_7a_compliant": true,
+        "slope_angle_deg": 2.0,
+        "roof_classification": null,
+        "p_f": 0.15,
+        "siding_classification": null,
+        "vegetation_clearance": "Adequate"
+      }
+    },
+    "debug": {
+      "difficulty": "easy",
+      "injected_archetypes": [],
+      "perturbations": [
+        {
+          "field": "number_of_residents",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "dwelling_use_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-007",
+      "received_at": "2026-06-29T07:46:00Z",
+      "source": "direct_web",
+      "fields": {
+        "street_address": "4636 Meadowlark Ln",
+        "city": null,
+        "county": null,
+        "state": "AZ",
+        "zip": "86001",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": false,
+        "first_name": null,
+        "last_name": "Reyes",
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": null,
+        "owner_phone_number": null,
+        "insured_dob": "1982-07-21",
+        "occupation": "Physician",
+        "number_of_residents": 1,
+        "kyc_score": 1,
+        "effective_date": "2026-07-23",
+        "coverage_a": 975000,
+        "coverage_e": "100000",
+        "coverage_f": null,
+        "replacement_cost": null,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": null,
+        "is_rental": "No",
+        "months_unoccupied": null,
+        "year_built": 1980,
+        "property_purchase_date": null,
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": null,
+        "has_animals": false,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": "Stucco",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": null,
+        "num_stories": 2,
+        "roof_replacement_year": 2012,
+        "roof_material": "Architecture Shingles",
+        "roof_shape": "Gable",
+        "heating_source": null,
+        "has_knob_and_tube_wiring": false,
+        "electrical_panel_brand": "Square D",
+        "electrical_panel_size_amps": 150,
+        "plumbing_age_years": 3,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": null,
+        "distance_to_fire_department": 2.7,
+        "fire_department_type": "Career",
+        "dist_to_nearest_fire_hydrant": null,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 68,
+        "is_7a_compliant": true,
+        "slope_angle_deg": 7.7,
+        "roof_classification": null,
+        "p_f": 0.18,
+        "siding_classification": "B",
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "medium",
+      "injected_archetypes": [],
+      "perturbations": [
+        {
+          "field": "city",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "county",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "first_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "owner_email",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "owner_phone_number",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "coverage_f",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "dwelling_use_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "months_unoccupied",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "property_purchase_date",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "acreage",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "square_feet",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "heating_source",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "fire_alarm",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "dist_to_nearest_fire_hydrant",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-008",
+      "received_at": "2026-06-29T06:15:00Z",
+      "source": "direct_web",
+      "fields": {
+        "street_address": "7138 Lakeview Blvd",
+        "city": null,
+        "county": null,
+        "state": "FL",
+        "zip": "34102",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": null,
+        "first_name": null,
+        "last_name": "Calloway",
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": "+1-555-0188",
+        "insured_dob": "1983-01-15",
+        "occupation": null,
+        "number_of_residents": null,
+        "kyc_score": null,
+        "effective_date": null,
+        "coverage_a": null,
+        "coverage_e": "500000",
+        "coverage_f": null,
+        "replacement_cost": null,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": "Primary",
+        "is_rental": "No",
+        "months_unoccupied": 0,
+        "year_built": 1949,
+        "property_purchase_date": "2018-04-15",
+        "pool_type": "None",
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": 1.96,
+        "has_animals": false,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": "Stucco",
+        "foundation_type": "Slab",
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": 4000,
+        "num_stories": null,
+        "roof_replacement_year": 2015,
+        "roof_material": "Asphalt Fiberglass Composite",
+        "roof_shape": null,
+        "heating_source": "Central Gas",
+        "has_knob_and_tube_wiring": true,
+        "electrical_panel_brand": "Federal Pacific",
+        "electrical_panel_size_amps": null,
+        "plumbing_age_years": null,
+        "water_heater_type": "Tankless",
+        "water_heater_age_years": null,
+        "water_heater_location": null,
+        "fire_alarm": null,
+        "distance_to_fire_department": 2.3,
+        "fire_department_type": "Career",
+        "dist_to_nearest_fire_hydrant": 369,
+        "opening_protection": null,
+        "road_access": "Multiple Access Points",
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": 28,
+        "is_7a_compliant": true,
+        "slope_angle_deg": null,
+        "roof_classification": null,
+        "p_f": null,
+        "siding_classification": null,
+        "vegetation_clearance": "Adequate"
+      }
+    },
+    "debug": {
+      "difficulty": "medium",
+      "injected_archetypes": [
+        "electrical_hazard"
+      ],
+      "perturbations": [
+        {
+          "field": "has_knob_and_tube_wiring",
+          "kind": "archetype_set",
+          "detail": "knob & tube present"
+        },
+        {
+          "field": "electrical_panel_brand",
+          "kind": "archetype_set",
+          "detail": "hazardous panel brand"
+        },
+        {
+          "field": "year_built",
+          "kind": "archetype_set",
+          "detail": "pre-1950 construction"
+        },
+        {
+          "field": "electrical_panel_size_amps",
+          "kind": "archetype_null",
+          "detail": "panel size unknown; ask producer"
+        },
+        {
+          "field": "city",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "county",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "listed_for_sale",
+          "kind": "missing_required_conditional",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "first_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "occupation",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "number_of_residents",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "kyc_score",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "effective_date",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_f",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "num_stories",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_shape",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "plumbing_age_years",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "fire_alarm",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "p_f",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  },
+  {
+    "lead": {
+      "lead_id": "LEAD-00002024-009",
+      "received_at": "2026-06-29T07:22:00Z",
+      "source": "broker_email",
+      "fields": {
+        "street_address": "8570 Old Mill Rd",
+        "city": "Boulder",
+        "county": "Boulder",
+        "state": null,
+        "zip": "80302",
+        "broker_tier": null,
+        "has_primary_policy_with_stand": null,
+        "listed_for_sale": false,
+        "first_name": null,
+        "last_name": "Ahn",
+        "residence_held_in_trust": false,
+        "trust_name": null,
+        "owner_email": "owner@example.com",
+        "owner_phone_number": null,
+        "insured_dob": "1988-05-17",
+        "occupation": null,
+        "number_of_residents": 2,
+        "kyc_score": null,
+        "effective_date": null,
+        "coverage_a": 190986,
+        "coverage_e": null,
+        "coverage_f": "1000",
+        "replacement_cost": null,
+        "dwelling_type": "Owner Occupied Single Family Residence",
+        "dwelling_use_type": "Primary",
+        "is_rental": "No",
+        "months_unoccupied": null,
+        "year_built": null,
+        "property_purchase_date": null,
+        "pool_type": null,
+        "pool_security": "None",
+        "pool_has_diving_board_or_slide": false,
+        "above_ground_pool_ladder": null,
+        "is_gated_community": false,
+        "acreage": null,
+        "has_animals": true,
+        "structure_type": "Single Family",
+        "construction_type": "Frame",
+        "siding_material": null,
+        "foundation_type": null,
+        "post_pier_supports_living_area": null,
+        "deck_height_ft": null,
+        "square_feet": null,
+        "num_stories": null,
+        "roof_replacement_year": null,
+        "roof_material": "Asphalt Fiberglass Composite",
+        "roof_shape": "Hip",
+        "heating_source": null,
+        "has_knob_and_tube_wiring": null,
+        "electrical_panel_brand": "GE",
+        "electrical_panel_size_amps": 200,
+        "plumbing_age_years": 60,
+        "water_heater_type": "Tank",
+        "water_heater_age_years": 17,
+        "water_heater_location": "In or Above Finished Space",
+        "fire_alarm": "Local Alarm",
+        "distance_to_fire_department": null,
+        "fire_department_type": "Career",
+        "dist_to_nearest_fire_hydrant": 296,
+        "opening_protection": null,
+        "road_access": null,
+        "protection_class": null,
+        "fire_dept_response_time": null,
+        "alternative_water_source": null,
+        "interior_sprinklers": null,
+        "physical_barriers": null,
+        "min_distance_to_neighbor_ft": null,
+        "is_7a_compliant": null,
+        "slope_angle_deg": null,
+        "roof_classification": null,
+        "p_f": null,
+        "siding_classification": null,
+        "vegetation_clearance": null
+      }
+    },
+    "debug": {
+      "difficulty": "hard",
+      "injected_archetypes": [
+        "plumbing_water_heater",
+        "replacement_cost_gap"
+      ],
+      "perturbations": [
+        {
+          "field": "water_heater_type",
+          "kind": "archetype_set",
+          "detail": "tank water heater"
+        },
+        {
+          "field": "water_heater_location",
+          "kind": "archetype_set",
+          "detail": "in finished space (leak exposure)"
+        },
+        {
+          "field": "plumbing_age_years",
+          "kind": "archetype_set",
+          "detail": "aged plumbing"
+        },
+        {
+          "field": "water_heater_age_years",
+          "kind": "archetype_set",
+          "detail": "old water heater"
+        },
+        {
+          "field": "replacement_cost",
+          "kind": "archetype_null",
+          "detail": "RC unknown; auto-fetch (system-owned)"
+        },
+        {
+          "field": "coverage_a",
+          "kind": "archetype_set",
+          "detail": "Coverage A well below likely RCE"
+        },
+        {
+          "field": "state",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "broker_tier",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "has_primary_policy_with_stand",
+          "kind": "missing_system_owned",
+          "detail": "conditional field nulled"
+        },
+        {
+          "field": "first_name",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "owner_phone_number",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "occupation",
+          "kind": "missing_bind_only",
+          "detail": "bind_only field nulled"
+        },
+        {
+          "field": "kyc_score",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "effective_date",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "coverage_e",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "months_unoccupied",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "year_built",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "property_purchase_date",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "pool_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "acreage",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_material",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "siding_classification",
+          "kind": "missing_derived",
+          "detail": "derivedFrom siding_material; nulled with source"
+        },
+        {
+          "field": "foundation_type",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "square_feet",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "num_stories",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_replacement_year",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "heating_source",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "has_knob_and_tube_wiring",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "distance_to_fire_department",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "road_access",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "protection_class",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "min_distance_to_neighbor_ft",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "is_7a_compliant",
+          "kind": "missing_required",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "slope_angle_deg",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "roof_classification",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "p_f",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        },
+        {
+          "field": "vegetation_clearance",
+          "kind": "missing_system_owned",
+          "detail": "always field nulled"
+        }
+      ]
+    }
+  }
+]
