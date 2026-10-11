@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.lead_id }}{% endblock %}
+{% block content %}
+<h2>{{ lead.lead_id }} · {{ address }}</h2>
+<p><span class="state">{{ case.state }}</span> round {{ case.rounds_sent }} · source {{ lead.source }} ·
+   effective {{ lead.fields.effective_date }}</p>
+{% if card %}<div class="card review"><strong>Open decision:</strong> {{ card.payload.summary }} <a href="/">Decide on the board</a></div>{% endif %}
+
+<h3>Playbook</h3>
+<table>
+  <tr><th>Page</th><th>Result</th><th>Unknowns that matter</th></tr>
+  {% for t in assessment.trees or [] %}
+  <tr><td>{{ t.tree }}</td>
+      <td>{% if t.certain_decline %}<strong>Decline:</strong> {{ t.decline_reasons|join("; ") }}
+          {% else %}{% for o in t.outcomes %}{{ o.kind }}: {{ o.detail }}<br>{% endfor %}
+          {% if t.possible_decline %}<em>possible decline</em>{% endif %}{% endif %}</td>
+      <td>{{ t.unknowns|join(", ") }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Asks</h3>
+<ul>{% for a in assessment.required_asks or [] %}<li>{{ a.label }} ({{ a.kind }}){% if a.note %}: {{ a.note }}{% endif %}</li>
+{% else %}<li class="muted">None</li>{% endfor %}</ul>
+
+<h3>Facts and provenance</h3>
+<table>
+  <tr><th>Field</th><th>Value</th><th>Source</th><th>Detail</th></tr>
+  {% for name, f in (assessment.facts or {}).items() %}
+  <tr><td>{{ name }}</td><td>{{ f.value }}</td><td>{{ f.source }}</td><td class="muted">{{ f.detail }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Outbound</h3>
+{% for row in outbox %}
+<div class="card"><div><strong>{{ row.payload.subject }}</strong>
+  <span class="muted">{{ row.kind }} · round {{ row.round }} · {{ row.status }}</span></div><pre>{{ row.payload.body }}</pre></div>
+{% else %}<p class="muted">Nothing sent.</p>{% endfor %}
+
+<h3>Replies</h3>
+{% for m in messages %}<pre>{{ m.body }}</pre><p class="muted">intent: {{ m.parsed.intent }}</p>
+{% else %}<p class="muted">No replies yet.</p>{% endfor %}
+<form method="post" action="/cases/{{ lead.lead_id }}/reply">
+  <textarea name="body" placeholder="Paste a broker reply (numbered answers work offline)"></textarea>
+  <button>Record reply</button>
+</form>
+
+<h3>Agent tool calls</h3>
+<table>
+  <tr><th>Run</th><th>Tool</th><th>OK</th><th>Guardrail reasons</th></tr>
+  {% for c in tool_calls %}<tr><td class="muted">{{ c.run_id }}</td><td>{{ c.tool }}</td><td>{{ "yes" if c.ok else "no" }}</td>
+  <td>{{ c.reasons|join("; ") }}</td></tr>{% endfor %}
+</table>
+
+<h3>Timeline</h3>
+<ul>{% for e in events %}<li class="muted">{{ e.created_at }} · {{ e.type }} · {{ e.payload }}</li>{% endfor %}</ul>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="counts">
+  {% for state, n in counts.items() %}<span class="pill"><span class="state">{{ state }}</span> {{ n }}</span>{% endfor %}
+</div>
+
+<h2>Needs you ({{ needs_uw|length }})</h2>
+{% for c in needs_uw %}
+{% set p = c.card.payload %}
+<div class="card {{ 'decline' if p.recommendation == 'decline' else 'review' }}">
+  <div><a href="/cases/{{ c.lead_id }}"><strong>{{ c.lead_id }}</strong></a> · {{ c.address }}
+    <span class="state">Tier {{ c.tier }}</span> <span class="muted">effective {{ c.effective_date }}</span></div>
+  <p>{{ p.summary }}</p>
+  <p class="muted">Recommendation: <strong>{{ p.recommendation or 'review' }}</strong>. {{ p.rationale }}</p>
+  {% if p.knockouts %}<ul>{% for k in p.knockouts %}<li>{{ k }}</li>{% endfor %}</ul>{% endif %}
+  {% if p.uw_items %}<ul>{% for u in p.uw_items %}<li><strong>{{ u.title }}:</strong> {{ u.detail }}</li>{% endfor %}</ul>{% endif %}
+  {% if p.asks %}<p class="muted">Email after approval (one message): {{ p.asks|length }} item(s): {{ p.asks|join(", ") }}</p>{% endif %}
+  {% if p.terms %}<p class="muted">Terms to expect on the quote:</p>
+    <ul>{% for x in p.terms %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  <form method="post" action="/cards/{{ c.card.id }}">
+    <label class="muted">Decline notice (sent only if you choose Decline; edit freely)</label>
+    <textarea name="message">{{ p.decline_message or c.draft_decline }}</textarea>
+    <input name="note" placeholder="Question for the broker (used with Ask broker)" style="width:100%;margin:6px 0">
+    <button class="{{ 'primary' if p.recommendation == 'approve' else '' }}" name="choice" value="approve">Approve</button>
+    <button class="{{ 'primary' if p.recommendation == 'ask_broker' else '' }}" name="choice" value="ask_broker">Ask broker</button>
+    <button class="{{ 'primary' if p.recommendation == 'decline' else '' }}" name="choice" value="decline">Decline</button>
+  </form>
+</div>
+{% else %}
+<p class="muted">Nothing needs you right now.</p>
+{% endfor %}
+
+<h2>All leads</h2>
+<table>
+  <tr><th>Lead</th><th>Tier</th><th>Property</th><th>State</th><th>Rounds</th><th>Status</th></tr>
+  {% for c in cases %}
+  <tr><td><a href="/cases/{{ c.lead_id }}">{{ c.lead_id }}</a></td><td>{{ c.tier }}</td><td>{{ c.address }}</td>
+      <td><span class="state">{{ c.state }}</span></td><td>{{ c.rounds }}</td><td class="muted">{{ c.note }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

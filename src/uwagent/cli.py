@@ -62,10 +62,22 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--offline", action="store_true", help="never call the model (deterministic templates)")
     run.add_argument("--db", help="SQLite path (default data/uwagent.db)")
     run.add_argument("--reply-rounds", type=int, default=0, help="simulate this many rounds of broker replies")
+    serve = sub.add_parser("serve", help="start the UW board")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8090)
+    serve.add_argument("--offline", action="store_true")
+    serve.add_argument("--db", help="SQLite path (default data/uwagent.db)")
     args = parser.parse_args(argv)
     settings = _settings(args)
     if args.command == "run":
         return _run(args, settings)
+    if args.command == "serve":
+        import uvicorn
+
+        from .web import create_app
+
+        uvicorn.run(create_app(build_service(settings)), host=args.host, port=args.port)
+        return 0
     return 1
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 import uuid
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
@@ -16,11 +16,19 @@ from .policy import Policy
 from .replies import parse_reply, validate_extraction
 from .simulator import persona_for, simulate_reply
 from .registry import Registry
-from .render import template_decline_message
+from .render import address, template_decline_message
 from .store import Store
 from .tools import Sender, ToolContext, escalate_to_uw, handle_tool
 
 ACTIONABLE = ("NEW", "ASSESSED")
+STATE_NOTES = {
+    "NEW": "Not processed yet",
+    "ASSESSED": "Re-assessing",
+    "FOLLOW_UP_SENT": "Waiting on broker reply",
+    "AWAITING_UW": "Needs an underwriter decision",
+    "QUOTED": "Quote sent",
+    "DECLINED": "Decline notice sent",
+}
 
 
 class Service:
@@ -118,6 +126,33 @@ class Service:
             self.receive_reply(lead_id, body)
             count += 1
         return count
+
+    def board(self) -> dict[str, Any]:
+        rows = []
+        for lead_id in self.store.lead_ids():
+            lead = self.store.get_lead(lead_id)
+            case = self.store.get_case(lead_id)
+            card = self.store.open_card_for(lead_id)
+            assessment = self.assess(lead_id)
+            draft = ""
+            if card is not None and not card["payload"].get("decline_message"):
+                draft = template_decline_message(assessment)
+            rows.append({"lead_id": lead_id, "address": address(lead.fields), "tier": assessment.tier,
+                         "priority": assessment.priority, "state": case["state"], "rounds": case["rounds_sent"],
+                         "effective_date": assessment.effective_date, "card": card,
+                         "note": STATE_NOTES.get(case["state"], case["state"]), "draft_decline": draft})
+        rows.sort(key=lambda row: row["priority"])  # Tier 1 brokers first, then the nearest effective date
+        return {"cases": rows, "needs_uw": [row for row in rows if row["card"]], "counts": dict(Counter(row["state"] for row in rows))}
+
+    def case_view(self, lead_id: str) -> dict[str, Any] | None:
+        case = self.store.get_case(lead_id)
+        if case is None:
+            return None
+        lead = self.store.get_lead(lead_id)
+        return {"lead": lead, "address": address(lead.fields), "case": case, "assessment": case["assessment"] or {},
+                "card": self.store.open_card_for(lead_id), "outbox": self.store.outbox_for(lead_id),
+                "messages": self.store.messages_for(lead_id), "tool_calls": self.store.tool_calls_for(lead_id),
+                "events": self.store.events_for(lead_id), "quote": self.store.get_quote(lead_id)}
 
     def resolve_card(self, card_id: int, choice: str, note: str = "", message: str | None = None) -> None:
         if choice not in UW_CHOICES:
