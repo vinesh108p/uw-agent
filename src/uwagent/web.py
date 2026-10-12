@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+import httpx
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -99,7 +100,7 @@ def create_app(service: Service) -> FastAPI:
             return _fail(request, "unknown", 404, f"unknown lead {lead_id}")
         except ValueError as exc:
             return _fail(request, "declined", 409, str(exc), back)
-        return RedirectResponse(back, status_code=303)
+        return _redirect(back, notice="reply_recorded", lead=lead_id)
 
     @app.post("/simulate-replies")
     def simulate() -> RedirectResponse:
@@ -108,8 +109,11 @@ def create_app(service: Service) -> FastAPI:
         return _redirect("/", notice="replies_simulated", updated=updated, quoted=_count(service, "QUOTED") - before)
 
     @app.post("/demo/reset")
-    def start_over() -> RedirectResponse:
-        service.reset()
+    def start_over(request: Request) -> RedirectResponse:
+        try:
+            service.reset()
+        except httpx.HTTPError:
+            return _fail(request, "mailbox_down", 503, "the mock mailbox did not respond; nothing was cleared")
         return _redirect("/", notice="reset")
 
     return app

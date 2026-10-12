@@ -18,6 +18,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Times: show the viewer's own clock (the server text is UTC inside a container). Falls back to the server text.
+  const dayFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+  const clockFmt = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
+  document.querySelectorAll("time[data-when]").forEach((el) => {
+    const moment = new Date(el.getAttribute("datetime"));
+    if (Number.isNaN(moment.getTime())) return;
+    const today = moment.toDateString() === new Date().toDateString();
+    el.textContent = `${today ? "today" : dayFmt.format(moment)} at ${clockFmt.format(moment)}`;
+  });
+
   // Pipeline rows open their case.
   document.querySelectorAll("tr[data-href]").forEach((row) => {
     row.addEventListener("click", (event) => {

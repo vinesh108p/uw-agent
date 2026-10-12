@@ -2,7 +2,7 @@ SHELL := /bin/sh
 ENV_FILE := $(wildcard .env)
 UV_RUN := uv run $(if $(ENV_FILE),--env-file .env,)
 
-.PHONY: setup fixtures test ports up down reset demo serve stack eval eval-live check-llm
+.PHONY: setup fixtures test ports up down reset demo serve stack eval eval-live check-llm screenshots
 
 setup:            ## install Python dependencies
 	uv sync
@@ -44,3 +44,6 @@ eval-live: up     ## live agent eval (spends tokens; needs ANTHROPIC_API_KEY in 
 
 check-llm:        ## one tiny live call to verify the Anthropic setup
 	$(UV_RUN) python scripts/check_llm.py
+
+screenshots:      ## capture the UW board pages to docs/screenshots (needs Google Chrome)
+	uv run python scripts/screenshots.py

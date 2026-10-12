@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import threading
 import uuid
 from collections import Counter, defaultdict
@@ -74,8 +75,9 @@ class Service:
 
     def advance(self, lead_id: str) -> RunResult | None:
         with self._lock(lead_id):
-            if self.store.get_case(lead_id)["state"] not in ACTIONABLE:
-                return None
+            case = self.store.get_case(lead_id)
+            if case is None or case["state"] not in ACTIONABLE:
+                return None  # unknown (for example wiped by Start over) or waiting on someone
             if self.store.open_card_for(lead_id) is not None:
                 return None  # never act while the underwriter has a decision open
             assessment = self.assess(lead_id)
@@ -135,9 +137,12 @@ class Service:
         return count
 
     def reset(self) -> None:
-        """Start over (demo): forget every lead and empty the mock mailbox."""
-        self.store.reset()
-        self.mailbox.reset()
+        """Start over (demo): empty the mock mailbox, then forget every lead. Raises if the mailbox does not answer."""
+        with contextlib.ExitStack() as held:
+            for lead_id in sorted(self.store.lead_ids()):  # every operation takes one lead lock, so sorted order cannot deadlock
+                held.enter_context(self._lock(lead_id))
+            self.mailbox.reset()  # first: if the mailbox is down this raises and nothing has been cleared yet
+            self.store.reset()
 
     def board(self) -> dict[str, Any]:
         rows = []

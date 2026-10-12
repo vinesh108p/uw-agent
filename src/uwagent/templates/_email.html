@@ -3,7 +3,7 @@
   <div class="thread-item__meta">
     {{ chip(item.kind, "navy") }}
     {% if item.kind == "Follow-up" %}<span>Round {{ item.round }}</span>{% endif %}
-    <span>{{ item.when }}</span>
+    <time datetime="{{ item.iso }}" data-when>{{ item.when }}</time>
     {{ chip(item.status, "green" if item.status == "Sent" else "amber") }}
   </div>
   <div class="email__head">

@@ -5,7 +5,7 @@
     <h3 class="card__title">Your decision</h3>
     {% else %}
     <div>
-      <h3 class="card__title">{{ card.name }} <span class="sep">·</span> <span class="card__property">{{ card.property }}</span></h3>
+      <h3 class="card__title">{{ card.name }} <span class="sep">·</span> <span class="card__property{{ ' is-missing' if card.property_missing }}">{{ card.property }}</span></h3>
       <div class="chips">
         {{ chip(card.tier, "tier") }}
         {{ chip("Effective " ~ card.effective, "red" if card.overdue else "plain") }}

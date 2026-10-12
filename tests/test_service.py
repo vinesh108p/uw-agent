@@ -87,3 +87,34 @@ def test_advance_does_nothing_while_a_card_is_open(service):
     service.store.update_case(lead_id, state="ASSESSED")
     assert service.advance(lead_id) is None
     assert [c["lead_id"] for c in service.store.list_open_cards()].count(lead_id) == 1
+
+
+def test_start_over_waits_for_runs_in_flight(tmp_path, registry, monkeypatch):
+    import threading
+    import time
+
+    import uwagent.service as service_module
+
+    svc = make_service(tmp_path, registry, {42: load_queue(42)})
+    svc.ingest_queue(seed=42)
+    started, release = threading.Event(), threading.Event()
+    real_run = service_module.run_agent
+
+    def slow_run(ctx, **kwargs):
+        started.set()
+        release.wait(5)  # stands in for model latency
+        return real_run(ctx, **kwargs)
+
+    monkeypatch.setattr(service_module, "run_agent", slow_run)
+    run = threading.Thread(target=lambda: svc.advance("LEAD-00000042-009"))
+    run.start()
+    assert started.wait(5)
+    reset = threading.Thread(target=svc.reset)
+    reset.start()
+    time.sleep(0.3)
+    assert reset.is_alive()  # Start over waits for the run that holds the lead's lock
+    release.set()
+    run.join(5)
+    reset.join(5)
+    assert svc.store.lead_ids() == [] and svc.mailbox.sent == []
+    assert svc.advance("LEAD-00000042-009") is None  # a run queued behind the reset finds nothing to do

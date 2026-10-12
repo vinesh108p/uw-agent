@@ -6,7 +6,7 @@ Pure functions and lookup tables only (no store, no I/O), so every label an unde
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Mapping
 
 from .registry import Registry
@@ -107,12 +107,26 @@ ERRORS = {
     "bad_choice": "That isn't a valid decision.",
     "declined": "This lead is declined; replies are no longer accepted.",
     "unknown": "That lead or card no longer exists.",
+    "mailbox_down": "The mock mailbox did not respond, so nothing was cleared. Start the harness (make up) and try again.",
 }
 FAILED_DELIVERY = "Email queued. The mailbox didn't respond, so it will be retried on your next action."
 
 
 def plural(n: int, word: str) -> str:
     return f"{n} {word}{'' if n == 1 else 's'}"
+
+
+def asked_phrase(item_keys: Iterable[str]) -> str:
+    """What one follow-up asked, said the same way on every page: '2 items and your question'."""
+    keys = list(item_keys)
+    items = len([key for key in keys if key != "uw_question"])
+    parts = ([plural(items, "item")] if items else []) + (["your question"] if "uw_question" in keys else [])
+    return " and ".join(parts) or "no items"
+
+
+def tag_for_title(title: str) -> str:
+    """Underwriter items are titled from their playbook tree ('Post Pier'); show the page name the case page uses."""
+    return {name.replace("_", " ").title(): label for name, label in PAGE_NAMES.items()}.get(title, title)
 
 
 def status_label(state: str) -> str:
@@ -165,7 +179,10 @@ def days_label(value: str | date | None, morning: date) -> tuple[str, bool]:
     """'Jul 8 · 9 days' (upcoming) or 'Jun 26 · 3 days ago' (overdue), counted from the queue morning."""
     if not value:
         return "Not provided", False
-    day = _as_date(value)
+    try:
+        day = _as_date(value)
+    except ValueError:
+        return str(value), False  # a broker reply may carry a date in any format; show it as typed
     delta = (day - morning).days
     if delta == 0:
         return f"{fmt_date(day)} · today", False
@@ -199,11 +216,22 @@ def fmt_value(field: str, value: Any, registry: Registry | None = None) -> str:
 
 
 def fmt_when(iso: str, now: datetime | None = None) -> str:
-    """When an action happened, in the machine's local time: 'today at 14:42' or 'Oct 7 at 14:42'."""
+    """When an action happened, in the server's local time: 'today at 14:42' or 'Oct 7 at 14:42'.
+
+    The page wraps this in <time datetime=...> and the browser replaces it with the viewer's own clock; this text is the
+    no-JavaScript fallback, labelled UTC when the server (for example a container) runs in UTC.
+    """
     moment = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone()
     now = (now or datetime.now(timezone.utc)).astimezone()
     clock = f"{moment:%H:%M}"
-    return f"today at {clock}" if moment.date() == now.date() else f"{fmt_date(moment.date())} at {clock}"
+    text = f"today at {clock}" if moment.date() == now.date() else f"{fmt_date(moment.date())} at {clock}"
+    return f"{text} UTC" if moment.utcoffset() == timedelta(0) else text
+
+
+def iso_ms(iso: str) -> str:
+    """An ISO timestamp trimmed to milliseconds, the precision every browser's Date parses."""
+    moment = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(timezone.utc)
+    return moment.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def source_label(entry: Mapping[str, Any], registry: Registry | None = None) -> str:
@@ -277,7 +305,7 @@ def whats_next(state: str, *, card_payload: Mapping[str, Any] | None = None, fol
             return "Recommended: ask the broker"
         return "Needs review"
     if state == "FOLLOW_UP_SENT":
-        return f"Asked broker for {plural(len(list(followup_items or [])), 'item')} (round {followup_round})"
+        return f"Asked broker for {asked_phrase(followup_items or [])} (round {followup_round})"
     if state == "QUOTED":
         count = len((quote or {}).get("conditions") or [])
         return f"Quote sent with {plural(count, 'condition')}" if count else "Quote sent, no conditions"
@@ -317,7 +345,7 @@ def key_facts(facts: Mapping[str, Mapping[str, Any]], registry: Registry | None 
 
 
 def banner_text(notice: str, *, state: str | None = None, choice: str | None = None, recipient: str = "",
-                items: int = 0, street: str = "", reason: str = "", failed: bool = False, n: int = 0, m: int = 0,
+                asked: str = "", street: str = "", reason: str = "", failed: bool = False, n: int = 0, m: int = 0,
                 updated: int = 0, quoted: int = 0) -> str | None:
     if failed:
         return FAILED_DELIVERY
@@ -327,12 +355,20 @@ def banner_text(notice: str, *, state: str | None = None, choice: str | None = N
         return f"Broker replies simulated: {plural(updated, 'lead')} updated, {quoted} now quoted."
     if notice == "reset":
         return "Started over. Load a new queue from the Demo menu."
+    if notice == "reply_recorded":
+        if state == "QUOTED":
+            return f"Reply recorded. Quote sent to {recipient}."
+        if state == "AWAITING_UW":
+            return "Reply recorded. The lead needs your decision." + (f" {reason}." if reason else "")
+        if state == "FOLLOW_UP_SENT":
+            return "Reply recorded. The lead is still waiting on the broker."
+        return "Reply recorded."
     if notice != "decided":
         return None
     if state == "FOLLOW_UP_SENT":
         if choice == "ask_broker":
-            return f"Question sent to the broker, with {plural(items, 'item')}." if items else "Question sent to the broker."
-        return f"Approved. One email asking for {plural(items, 'item')} went to {recipient}."
+            return f"Email sent to {recipient} asking for {asked}."
+        return f"Approved. One email asking for {asked} went to {recipient}."
     if state == "QUOTED":
         return f"Approved. Quote sent to {recipient}."
     if state == "DECLINED":

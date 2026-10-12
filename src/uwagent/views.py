@@ -69,7 +69,7 @@ def reasons(payload: Mapping[str, Any], assessment: Mapping[str, Any]) -> list[d
     for detail in payload.get("knockouts", []):
         add(p.page_name(trees[detail]) if detail in trees else "Playbook", detail)
     for item in payload.get("uw_items", []):
-        add(item.get("title") or "Review", item.get("detail", ""))
+        add(p.tag_for_title(item.get("title") or "Review"), item.get("detail", ""))
     conditions = payload.get("conditions") or []
     if conditions:
         add("Conditions", f"{p.plural(len(conditions), 'playbook condition')} to approve")
@@ -102,7 +102,7 @@ def banner(service: Service, params: Mapping[str, str]) -> dict[str, str] | None
         asked = followup["payload"].get("items", []) if followup else []
         context.update(state=case["state"], choice=params.get("choice"),
                        recipient=assessment.get("recipient") or "the broker",
-                       items=len([key for key in asked if key != "uw_question"]),
+                       asked=p.asked_phrase(asked),
                        street=_values(service, lead_id).get("street_address") or "",
                        reason=why[0]["text"] if why else "",
                        failed=bool(outbox) and outbox[-1]["status"] == "failed")
@@ -152,6 +152,7 @@ def decision_card(service: Service, card: Mapping[str, Any], *, morning: date | 
         effective, overdue = p.fmt_value("effective_date", values.get("effective_date")), False
     return {
         "id": card["id"], "lead_id": lead_id, "name": p.insured_name(values), "property": p.property_line(values),
+        "property_missing": not values.get("street_address"),
         "tier": p.tier_label(assessment.get("tier", 9)), "effective": effective, "overdue": overdue,
         "badge": badge, "tone": tone, "decline_edge": recommendation == "decline",
         "reasons": reasons(payload, assessment),
@@ -183,6 +184,7 @@ def queue_page(service: Service, params: Mapping[str, str]) -> dict[str, Any]:
         values = _values(service, lead_id)
         effective, overdue = p.days_label(row["effective_date"], morning) if morning else ("", False)
         rows.append({"lead_id": lead_id, "name": p.insured_name(values), "property": p.property_line(values),
+                     "property_missing": not values.get("street_address"),
                      "tier": p.tier_label(row["tier"]), "effective": effective, "overdue": overdue,
                      "status": p.status_label(row["state"]), "tone": p.status_tone(row["state"]),
                      "next": _whats_next(service, lead_id, row["state"], row["card"])})
@@ -203,30 +205,32 @@ EMAIL_KINDS = {"followup": "Follow-up", "quote": "Quote", "decline": "Decline no
 DECISION_TEXT = {"approve": "You approved", "ask_broker": "You asked the broker", "decline": "You declined"}
 
 
+def _timed(before: str, row: Mapping[str, Any] | None, tail: str) -> dict[str, Any]:
+    """A sentence with a time in it. The template wraps the time in <time> so the browser can show the viewer's own clock."""
+    when_text = p.fmt_when(row["created_at"]) if row else "earlier"
+    return {"text": f"{before}{when_text}{tail}", "before": before, "tail": tail, "when_text": when_text,
+            "when_iso": p.iso_ms(row["created_at"]) if row else None}
+
+
 def _stands(state: str, view: Mapping[str, Any], assessment: Mapping[str, Any], recipient: str) -> dict[str, Any]:
     """The 'Where this stands' panel for leads without an open decision card."""
     outbox = view["outbox"]
     if state == "FOLLOW_UP_SENT":
         row = _latest(outbox, "followup")
-        count = len(row["payload"].get("items", [])) if row else 0
-        when = p.fmt_when(row["created_at"]) if row else "earlier"
         round_ = row["round"] if row else 0
-        return {"text": f"We asked the broker for {p.plural(count, 'item')} {when} (round {round_}). "
-                        "When they reply, the assistant re-checks the lead automatically."}
+        return _timed(f"We asked the broker for {p.asked_phrase(row['payload'].get('items', []) if row else [])} ", row,
+                      f" (round {round_}). When they reply, the assistant re-checks the lead automatically.")
     if state == "QUOTED":
         quote = view["quote"] or {}
-        row = _latest(outbox, "quote")
-        when = p.fmt_when(row["created_at"]) if row else "earlier"
         conditions = quote.get("conditions") or []
-        text = (f"Quote sent {when} with {p.plural(len(conditions), 'condition')}." if conditions
-                else f"Quote sent {when} with no conditions.")
-        return {"text": text, "conditions": conditions, "subjectivities": quote.get("subjectivities") or []}
+        tail = f" with {p.plural(len(conditions), 'condition')}." if conditions else " with no conditions."
+        return {**_timed("Quote sent ", _latest(outbox, "quote"), tail), "conditions": conditions,
+                "subjectivities": quote.get("subjectivities") or []}
     if state == "DECLINED":
-        row = _latest(outbox, "decline")
-        when = p.fmt_when(row["created_at"]) if row else "earlier"
         found = [{"tag": p.page_name(entry["tree"]), "text": p.reason_text(entry["detail"])}
                  for entry in assessment.get("knockouts", [])]
-        return {"text": f"Declined {when}.", "reasons": found, "after": f"Decline notice sent to {recipient}."}
+        return {**_timed("Declined ", _latest(outbox, "decline"), "."), "reasons": found,
+                "after": f"Decline notice sent to {recipient}."}
     if state == "AWAITING_UW":
         return {"text": "This lead needs your decision."}
     return {"text": "The assistant is working on this lead."}
@@ -244,18 +248,18 @@ def _conversation(service: Service, lead_id: str, view: Mapping[str, Any]) -> li
     items: list[dict[str, Any]] = []
     for row in view["outbox"]:
         lines = (row["payload"].get("body") or "").splitlines()
-        items.append({"type": "email", "at": row["created_at"], "when": p.fmt_when(row["created_at"]),
+        items.append({"type": "email", "at": row["created_at"], "iso": p.iso_ms(row["created_at"]), "when": p.fmt_when(row["created_at"]),
                       "kind": EMAIL_KINDS.get(row["kind"], row["kind"]), "round": row["round"],
                       "to": row["payload"].get("to", ""), "subject": row["payload"].get("subject", ""),
                       "preview": "\n".join(lines[:3]), "rest": "\n".join(lines[3:]),
                       "status": "Sent" if row["status"] == "sent" else "Retrying"})
     for index, message in enumerate(view["messages"]):
         flags = reply_events[index]["payload"].get("flags", []) if index < len(reply_events) else []
-        items.append({"type": "reply", "at": message["created_at"], "when": p.fmt_when(message["created_at"]),
+        items.append({"type": "reply", "at": message["created_at"], "iso": p.iso_ms(message["created_at"]), "when": p.fmt_when(message["created_at"]),
                       "body": message["body"], "read_as": read_as.get(f"reply r{message['round']}", []), "flags": flags})
     for event in view["events"]:
         if event["type"] == "uw_decision":
-            items.append({"type": "decision", "at": event["created_at"], "when": p.fmt_when(event["created_at"]),
+            items.append({"type": "decision", "at": event["created_at"], "iso": p.iso_ms(event["created_at"]), "when": p.fmt_when(event["created_at"]),
                           "text": DECISION_TEXT.get(event["payload"].get("choice"), "You decided"),
                           "note": event["payload"].get("note", "")})
     order = {"decision": 0, "email": 1, "reply": 2}
@@ -269,7 +273,8 @@ def case_page(service: Service, lead_id: str, params: Mapping[str, str]) -> dict
         return None
     registry = service.registry
     morning = morning_of(service)
-    lead, case, assessment = view["lead"], view["case"], view["assessment"]
+    lead, case = view["lead"], view["case"]
+    assessment = view["assessment"] or service.assess(lead_id).to_dict()  # not worked yet: compute it live
     values = _values(service, lead_id)
     state = case["state"]
     recipient = assessment.get("recipient") or "the broker"
@@ -283,6 +288,7 @@ def case_page(service: Service, lead_id: str, params: Mapping[str, str]) -> dict
     return {
         "chrome": chrome(service), "banner": banner(service, params), "lead_id": lead_id,
         "name": p.insured_name(values), "property": p.property_line(values),
+        "property_missing": not values.get("street_address"),
         "status": p.status_label(state), "tone": p.status_tone(state),
         "tier": p.tier_label(assessment.get("tier", 9)), "effective": effective, "overdue": overdue,
         "channel": p.CHANNELS.get(lead.source, lead.source),
@@ -301,7 +307,7 @@ def case_page(service: Service, lead_id: str, params: Mapping[str, str]) -> dict
                             "result": "Done" if call["ok"] else
                             "Blocked: " + "; ".join(reason.removeprefix("Rejected: ") for reason in call["reasons"])}
                            for call in view["tool_calls"]],
-            "events": [{"when": p.fmt_when(event["created_at"]), "what": p.event_label(event["type"])}
+            "events": [{"when": p.fmt_when(event["created_at"]), "iso": p.iso_ms(event["created_at"]), "what": p.event_label(event["type"])}
                        for event in view["events"]],
         },
     }

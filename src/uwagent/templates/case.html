@@ -4,7 +4,7 @@
 {% block content %}
 <a class="back" href="/">‹ Queue</a>
 <header class="case-head">
-  <h1>{{ name }} <span class="sep">·</span> <span class="case-head__property">{{ property }}</span></h1>
+  <h1>{{ name }} <span class="sep">·</span> <span class="case-head__property{{ ' is-missing' if property_missing }}">{{ property }}</span></h1>
   <div class="chips">
     {{ chip(status, tone) }}
     {{ chip(tier, "tier") }}
@@ -19,7 +19,7 @@
   {% if card %}
   {% include "_card.html" %}
   {% else %}
-  <p class="stands__text">{{ stands.text }}</p>
+  <p class="stands__text">{% if stands.when_iso %}{{ stands.before }}<time datetime="{{ stands.when_iso }}" data-when>{{ stands.when_text }}</time>{{ stands.tail }}{% else %}{{ stands.text }}{% endif %}</p>
   {% if stands.reasons %}
   <ul class="reasons">{% for reason in stands.reasons %}<li><span class="tag">{{ reason.tag }}</span><span>{{ reason.text }}</span></li>{% endfor %}</ul>
   {% endif %}
@@ -56,7 +56,7 @@
         {% include "_email.html" %}
         {% elif item.type == "reply" %}
         <article class="thread-item reply">
-          <div class="thread-item__meta">{{ chip("Broker reply", "blue") }}<span>{{ item.when }}</span></div>
+          <div class="thread-item__meta">{{ chip("Broker reply", "blue") }}<time datetime="{{ item.iso }}" data-when>{{ item.when }}</time></div>
           <pre class="email__body">{{ item.body }}</pre>
           {% if item.read_as %}
           <div class="read-as"><span class="muted">Assistant read this as:</span>{% for fact in item.read_as %}<span class="read-chip">{{ fact.label }} → {{ fact.value }}</span>{% endfor %}</div>
@@ -65,7 +65,7 @@
         </article>
         {% else %}
         <article class="thread-item decision">
-          <div class="thread-item__meta">{{ chip("Underwriter", "slate") }}<span>{{ item.when }}</span></div>
+          <div class="thread-item__meta">{{ chip("Underwriter", "slate") }}<time datetime="{{ item.iso }}" data-when>{{ item.when }}</time></div>
           <p class="decision-text"><strong>{{ item.text }}</strong>{% if item.note %}: “{{ item.note }}”{% endif %}</p>
         </article>
         {% endif %}
@@ -75,7 +75,8 @@
       <details class="paste-reply">
         <summary>Paste a broker reply</summary>
         <form method="post" action="/cases/{{ lead_id }}/reply">
-          <textarea name="body" rows="4" placeholder="Numbered answers work best, for example: 1. Clay Tile"></textarea>
+          <label class="visually-hidden" for="paste-body">Broker reply</label>
+          <textarea id="paste-body" name="body" rows="4" placeholder="Numbered answers work best, for example: 1. Clay Tile"></textarea>
           <button class="btn btn--secondary btn--small" type="submit">Record reply</button>
         </form>
       </details>
@@ -110,7 +111,7 @@
   </table>
   <h3 class="minor">Timeline</h3>
   <table class="plain">
-    <tbody>{% for event in details.events %}<tr><td class="mono">{{ event.when }}</td><td>{{ event.what }}</td></tr>{% endfor %}</tbody>
+    <tbody>{% for event in details.events %}<tr><td class="mono"><time datetime="{{ event.iso }}" data-when>{{ event.when }}</time></td><td>{{ event.what }}</td></tr>{% endfor %}</tbody>
   </table>
 </details>
 {% endblock %}

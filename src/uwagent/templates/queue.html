@@ -31,7 +31,7 @@
       <tr data-href="/cases/{{ row.lead_id }}">
         <td>
           <a class="pipeline__name" href="/cases/{{ row.lead_id }}">{{ row.name }}</a>
-          <div class="pipeline__sub">{{ row.property }} <span class="mono">{{ row.lead_id }}</span></div>
+          <div class="pipeline__sub"><span class="{{ 'is-missing' if row.property_missing }}">{{ row.property }}</span> <span class="mono">{{ row.lead_id }}</span></div>
         </td>
         <td>{{ chip(row.tier, "tier") }}</td>
         <td class="{{ 'overdue' if row.overdue }}">{{ row.effective }}</td>

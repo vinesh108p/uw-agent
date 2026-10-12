@@ -68,6 +68,8 @@ class FakeMailbox:
         return [record for record in reversed(self.sent) if record["lead_id"] == lead_id]
 
     def reset(self) -> None:
+        if self.fail:
+            raise httpx.ConnectError("mailbox is down")
         self.sent.clear()
         self._by_key.clear()
 

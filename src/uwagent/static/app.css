@@ -5,7 +5,7 @@
   --surface-2: #fbfaf7;
   --ink: #1c2430;
   --ink-2: #475163;
-  --ink-3: #6b7280;
+  --ink-3: #656c79;
   --line: #e5e2da;
   --line-2: #d5d1c7;
   --accent: #1f3a5f;
@@ -38,6 +38,9 @@ summary { cursor: pointer; }
 .mono { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
 .muted { color: var(--ink-3); }
 .sep { color: var(--line-2); font-weight: 400; margin: 0 2px; }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.is-missing { font-style: italic; color: var(--ink-3); }
 
 /* Top bar */
 .topbar { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 16px;
@@ -177,6 +180,7 @@ textarea { min-height: 96px; resize: vertical; }
 .panel__title { margin-bottom: 12px; }
 .stands .card { margin: 0; box-shadow: none; }
 .stands__text { margin: 0; font-size: 16px; }
+.stands__text + .reasons { margin-top: 10px; }
 .stands__after { margin: 10px 0 0; color: var(--ink-2); }
 .minor { margin-top: 14px; font-size: 13px; color: var(--ink-2); }
 .case-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 16px; }

@@ -23,8 +23,13 @@ make up         # leadgen on :8081 (answer key on, for evals) and mailbox on :80
 make demo       # process the seed-42 queue, then open the UW board at http://127.0.0.1:8090
 ```
 
-**One command, no local Python:** run `docker compose up --build`, open http://127.0.0.1:8090 and click **Run morning queue**.
-Every email the assistant sends appears in the mock inbox at http://127.0.0.1:8025.
+**One command, no local Python:** run `docker compose up --build`, open http://127.0.0.1:8090 and choose **Demo → Run morning queue**.
+Every email the assistant sends appears in the mock inbox at http://127.0.0.1:8025, and every email and reply also shows inside each case.
+
+**Demo menu** (top right of the board):
+- **Run morning queue:** loads the leads; the seed defaults to 42.
+- **Simulate broker replies:** answers every open follow-up the way a broker would, so you can watch leads turn into quotes.
+- **Start over:** clears this demo's leads and empties the mock mailbox, so you can rehearse and then run the demo cleanly. If the mailbox is down it clears nothing and says so.
 
 ### Live model (optional)
 
@@ -64,7 +69,13 @@ make demo
 
    On rejection the agent revises up to twice. After that a template is used, then the underwriter takes over.
 6. **Outbox → mailbox.** Sends are idempotent per lead, kind and round.
-7. **Replies.** Replies are parsed by a separate, tool-less extractor, validated against the registry, and trigger a new run. The UI's **Simulate broker replies** button uses scripted producer personas.
+7. **Replies.** Replies are parsed by a separate, tool-less extractor, validated against the registry, and trigger a new run. The Demo menu's **Simulate broker replies** uses scripted producer personas.
+
+**What the underwriter sees.** Captured with `make screenshots`:
+
+| Morning queue | Case needing a decision | Quote sent |
+|---|---|---|
+| ![Morning queue](docs/screenshots/queue.png) | ![Case needing a decision](docs/screenshots/case_needs_decision.png) | ![Quote sent](docs/screenshots/case_quoted.png) |
 
 ## Evals
 
@@ -137,4 +148,4 @@ Observed on 2026-10-08 against the harness's own leadgen and mailbox services. R
 - Closed loop after two simulated reply rounds: offline 14 quoted, 5 declined, 1 awaiting the underwriter (8 quotes with no underwriter touch, reply extraction 0.904); live 6 quoted, 3 declined, 1 awaiting (4 with no touch, reply extraction 0.94). Hallucinated values: 0 in both.
 - Morning queue (seed 42): 4 follow-ups sent (one per lead), 6 leads waiting on an underwriter decision (3 decline confirmations, 3 reviews before their one email), Tier 1 leads first.
 - The first live run found a real defect: the code-written subject and closing promised to "finalize your quote", which the policy forbids, so the moderator rejected every agent-written follow-up (14 rejections, 62% false positives on the good red-team emails) and the run silently fell back to templates. Fixed in design §17.12.
-- Docker path verified from a clean mailbox: `make up` + `make eval` (all gates PASS) and `docker compose up --build` (board on `127.0.0.1:8090`). The morning queue sent 4 follow-ups (one per lead) and opened 6 underwriter cards; a decline click sent one notice and a second click returned 409; one round of simulated broker replies produced 4 quotes; no lead ever got more than one follow-up per round.
+- Docker path verified from a clean mailbox: `make up` + `make eval` (all gates PASS) and `docker compose up --build` (board on `127.0.0.1:8090`). The morning queue sent 4 follow-ups (one per lead) and opened 6 underwriter cards; a decline click sent one notice and a second click returned 409 for API clients (the board itself shows an "already decided" banner and sends nothing); one round of simulated broker replies produced 4 quotes; no lead ever got more than one follow-up per round.
