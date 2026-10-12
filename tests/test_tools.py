@@ -20,6 +20,7 @@ def test_request_uw_decision_creates_a_card_with_the_planned_email(seed42, regis
     payload = ctx.store.open_card_for(ctx.lead.lead_id)["payload"]
     assert payload["recommendation"] == "approve" and payload["scope"] == ["condition:exclude_liability"]
     assert len(payload["asks"]) == 6 and payload["terms"] == ["Personal liability coverage is excluded"]
+    assert payload["written_by"] == "template" and {item["section"] for item in payload["ask_items"]} >= {"Insured"}
     assert mailbox.sent == []
 
 

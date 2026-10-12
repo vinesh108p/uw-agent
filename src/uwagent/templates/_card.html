@@ -1,0 +1,59 @@
+{% from "_macros.html" import chip, action_form %}
+<article class="card{{ ' card--decline' if card.decline_edge }}" id="card-{{ card.id }}">
+  <header class="card__head">
+    {% if card.in_case %}
+    <h3 class="card__title">Your decision</h3>
+    {% else %}
+    <div>
+      <h3 class="card__title">{{ card.name }} <span class="sep">·</span> <span class="card__property">{{ card.property }}</span></h3>
+      <div class="chips">
+        {{ chip(card.tier, "tier") }}
+        {{ chip("Effective " ~ card.effective, "red" if card.overdue else "plain") }}
+        <span class="mono">{{ card.lead_id }}</span>
+      </div>
+    </div>
+    {% endif %}
+    {{ chip(card.badge, card.tone, strong=True) }}
+  </header>
+
+  <section class="card__why">
+    <h4>Why it needs you</h4>
+    <ul class="reasons">
+      {% for reason in card.reasons %}<li><span class="tag">{{ reason.tag }}</span><span>{{ reason.text }}</span></li>{% endfor %}
+    </ul>
+    {% if card.agent_note %}<p class="agent-note">Agent's note: {{ card.agent_note }}</p>{% endif %}
+  </section>
+
+  <section class="card__actions">
+    {% if card.primary %}{{ action_form(card, card.primary, true) }}{% endif %}
+    <div class="card__others">
+      {% for action in card.others %}
+      <details class="action-panel" id="{{ action.panel_id }}">
+        <summary class="btn btn--quiet btn--small">{{ action.short }}</summary>
+        {{ action_form(card, action, false) }}
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if card.preview or card.terms %}
+  <section class="card__email">
+    {% if card.preview %}
+    <details class="preview">
+      <summary><strong>{{ card.preview_label }}</strong> {{ card.preview.count }} {{ "question" if card.preview.count == 1 else "questions" }}, grouped by topic. <span class="muted">{{ card.preview.summary }}</span></summary>
+      <div class="preview__groups">
+        {% for group in card.preview.groups %}
+        <div><h5>{{ group.section }}</h5><ul>{% for label in group.labels %}<li>{{ label }}</li>{% endfor %}</ul></div>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+    {% if card.terms %}
+    <div class="terms"><h5>Terms that would apply to a quote</h5><ul>{% for term in card.terms %}<li>{{ term }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    <p class="fine">Final wording is written when sent.</p>
+  </section>
+  {% endif %}
+
+  {% if card.show_case_link %}<a class="card__link" href="/cases/{{ card.lead_id }}">Open case ›</a>{% endif %}
+</article>

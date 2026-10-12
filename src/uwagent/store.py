@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY, lead_id TEXT NOT NULL
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Microseconds keep rows from different tables in true order when merged into one conversation thread.
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _dump(value: Any) -> str:
@@ -71,6 +72,17 @@ class Store:
     def _exec(self, sql: str, params: tuple = ()) -> int:
         with self._lock:
             return self._conn.execute(sql, params).lastrowid
+
+    def reset(self) -> None:
+        """Start over (demo): delete every row and rotate instance_id, so new outbox idempotency keys can never
+        collide with emails the mailbox already holds."""
+        tables = ("leads", "cases", "facts", "flags", "tool_calls", "outbox", "cards", "decisions", "messages_in",
+                  "quotes", "events")
+        with self._lock:
+            for table in tables:
+                self._conn.execute(f"DELETE FROM {table}")
+            self.instance_id = uuid.uuid4().hex[:8]
+            self._conn.execute("UPDATE meta SET value = ? WHERE key = 'instance_id'", (self.instance_id,))
 
     # leads & cases
     def upsert_lead(self, lead: Lead) -> None:
@@ -144,7 +156,7 @@ class Store:
     def _outbox(self, row: sqlite3.Row) -> dict[str, Any]:
         return {"id": row["id"], "lead_id": row["lead_id"], "kind": row["kind"], "round": row["round"],
                 "idempotency_key": row["idempotency_key"], "payload": json.loads(row["payload_json"]), "status": row["status"],
-                "mailbox_id": row["mailbox_id"], "error": row["error"]}
+                "mailbox_id": row["mailbox_id"], "error": row["error"], "created_at": row["created_at"]}
 
     def enqueue_outbox(self, lead_id: str, kind: str, round_: int, payload: dict[str, Any], revision: int = 0) -> dict[str, Any]:
         key = f"{self.instance_id}:{lead_id}:{kind}:{round_}" + (f":r{revision}" if revision else "")

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip %}
+{% block content %}
+{% if not rows %}
+<section class="empty">
+  <h1>No leads yet</h1>
+  <p>Use <strong>Demo → Run morning queue</strong> to load today's leads.</p>
+</section>
+{% else %}
+<nav class="tiles" aria-label="Queue summary">
+  {% for tile in tiles %}
+  <a class="tile tile--{{ tile.tone }}" href="{{ tile.href }}"><span class="tile__count">{{ tile.count }}</span><span class="tile__label">{{ tile.label }}</span></a>
+  {% endfor %}
+</nav>
+
+<section id="needs-decision" class="section">
+  <h2 class="section__title">Needs your decision ({{ cards|length }})</h2>
+  {% for card in cards %}
+  {% include "_card.html" %}
+  {% else %}
+  <p class="empty-inline">You're all caught up. {{ waiting }} {{ "lead is" if waiting == 1 else "leads are" }} waiting on brokers.</p>
+  {% endfor %}
+</section>
+
+<section id="all-leads" class="section">
+  <h2 class="section__title">All leads</h2>
+  <table class="pipeline">
+    <thead><tr><th>Insured &amp; property</th><th>Broker</th><th>Effective</th><th>Status</th><th>What's next</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr data-href="/cases/{{ row.lead_id }}">
+        <td>
+          <a class="pipeline__name" href="/cases/{{ row.lead_id }}">{{ row.name }}</a>
+          <div class="pipeline__sub">{{ row.property }} <span class="mono">{{ row.lead_id }}</span></div>
+        </td>
+        <td>{{ chip(row.tier, "tier") }}</td>
+        <td class="{{ 'overdue' if row.overdue }}">{{ row.effective }}</td>
+        <td>{{ chip(row.status, row.tone) }}</td>
+        <td class="pipeline__next">{{ row.next }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

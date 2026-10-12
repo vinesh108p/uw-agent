@@ -1,0 +1,21 @@
+{% macro chip(label, tone="plain", strong=False) -%}
+<span class="chip chip--{{ tone }}{{ ' chip--strong' if strong }}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro action_form(card, action, primary) -%}
+<form method="post" action="/cards/{{ card.id }}" class="action{{ ' action--primary' if primary }}">
+  <input type="hidden" name="choice" value="{{ action.choice }}">
+  <input type="hidden" name="back" value="{{ card.back }}">
+  {% if action.choice == "decline" %}
+  <label class="field-label" for="message-{{ action.panel_id }}{{ '-p' if primary }}">Decline notice (edit before sending)</label>
+  <textarea id="message-{{ action.panel_id }}{{ '-p' if primary }}" name="message" rows="4">{{ action.message }}</textarea>
+  {% elif action.choice == "ask_broker" %}
+  <label class="field-label" for="note-{{ action.panel_id }}{{ '-p' if primary }}">Your question for the broker{{ '' if action.question_required else ' (optional)' }}</label>
+  <input type="text" id="note-{{ action.panel_id }}{{ '-p' if primary }}" name="note" placeholder="e.g. Is anyone living in the home right now?"{{ ' required' if action.question_required }}>
+  {% endif %}
+  <div class="action__row">
+    <button class="btn {{ 'btn--primary' if primary else 'btn--secondary' }}{{ ' btn--danger' if primary and action.choice == 'decline' }}" type="submit">{{ action.label }}</button>
+    <p class="consequence">{{ action.consequence }}</p>
+  </div>
+</form>
+{%- endmacro %}

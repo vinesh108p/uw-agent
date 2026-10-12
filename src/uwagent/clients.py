@@ -48,3 +48,7 @@ class MailboxClient:
         response = self._http.get(f"/leads/{lead_id}/emails")
         response.raise_for_status()
         return response.json()
+
+    def reset(self) -> None:
+        """Empty the mock mailbox (demo Start over)."""
+        self._http.post("/reset").raise_for_status()

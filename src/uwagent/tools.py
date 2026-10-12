@@ -193,6 +193,8 @@ def _request_uw_decision(args: dict[str, Any], ctx: ToolContext) -> ToolResult:
                "decline_message": message, "uw_items": [asdict(u) for u in a.uw_items],
                "knockouts": [o.detail for o in a.knockouts], "conditions": [o.detail for o in a.conditions],
                "asks": [item.label for item in a.released_asks], "terms": a.terms, "scope": a.scope,
+               "ask_items": [{"label": item.label, "section": item.section, "kind": item.kind} for item in a.released_asks],
+               "written_by": "template" if ctx.use_templates else "agent",
                "allowed_choices": list(UW_CHOICES)}
     card_id = ctx.store.create_card(ctx.lead.lead_id, ctx.case["rounds_sent"], payload)
     ctx.store.update_case(ctx.lead.lead_id, state="AWAITING_UW")
@@ -269,6 +271,8 @@ def escalate_to_uw(ctx: ToolContext, why: str) -> int:
                "rationale": "Escalated by the runner.", "decline_message": "", "uw_items": [asdict(u) for u in a.uw_items],
                "knockouts": [o.detail for o in a.knockouts], "conditions": [o.detail for o in a.conditions],
                "asks": [item.label for item in a.released_asks], "terms": a.terms, "scope": a.scope,
+               "ask_items": [{"label": item.label, "section": item.section, "kind": item.kind} for item in a.released_asks],
+               "written_by": "system",
                "allowed_choices": list(UW_CHOICES)}
     card_id = ctx.store.create_card(ctx.lead.lead_id, ctx.case["rounds_sent"], payload)
     ctx.store.update_case(ctx.lead.lead_id, state="AWAITING_UW")

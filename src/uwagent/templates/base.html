@@ -1,36 +1,51 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>{% block title %}UW queue{% endblock %}</title>
-<style>
-  body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d232b; }
-  header { background: #14213d; color: #fff; padding: 12px 24px; display: flex; gap: 20px; align-items: center; }
-  header a { color: #fff; text-decoration: none; font-weight: 600; }
-  main { padding: 20px 24px; max-width: 1100px; }
-  .counts span.pill { margin-right: 14px; }
-  .card { background: #fff; border: 1px solid #d8dde3; border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
-  .card.decline { border-left: 4px solid #c0392b; }
-  .card.review { border-left: 4px solid #d4a017; }
-  .muted { color: #5b6573; font-size: 13px; }
-  table { border-collapse: collapse; width: 100%; background: #fff; }
-  td, th { border-bottom: 1px solid #e3e6ea; padding: 6px 8px; text-align: left; font-size: 14px; vertical-align: top; }
-  pre { white-space: pre-wrap; background: #f0f2f5; padding: 10px; border-radius: 6px; font-size: 13px; }
-  button { padding: 6px 12px; border-radius: 6px; border: 1px solid #14213d; background: #fff; cursor: pointer; }
-  button.primary { background: #14213d; color: #fff; }
-  textarea { width: 100%; min-height: 110px; font-family: inherit; }
-  .state { font-weight: 600; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #e8ecf1; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Underwriting queue{% endblock %} · Stand</title>
+  <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-<header>
-  <a href="/">UW queue</a>
-  <form method="post" action="/queue" style="display:flex;gap:6px">
-    <input name="seed" placeholder="seed" size="6"><button>Run morning queue</button>
-  </form>
-  <form method="post" action="/simulate-replies"><button>Simulate broker replies</button></form>
-  <a href="http://127.0.0.1:8025/" target="_blank">Mailbox</a>
+<header class="topbar">
+  <div class="topbar__left">
+    <a class="brand" href="/">Underwriting queue</a>
+    {% if chrome.subtitle %}<span class="topbar__subtitle">{{ chrome.subtitle }}</span>{% endif %}
+  </div>
+  <div class="topbar__right">
+    {% if chrome.autosend_paused %}<span class="badge badge--amber">Auto-send paused</span>{% endif %}
+    <span class="badge {{ 'badge--live' if chrome.live else 'badge--offline' }}">{{ chrome.mode }}</span>
+    <a class="topbar__link" href="{{ chrome.mailbox_url }}" target="_blank" rel="noopener">Mailbox ↗</a>
+    <details class="demo">
+      <summary class="btn btn--quiet btn--small">Demo ▾</summary>
+      <div class="demo__menu">
+        <form method="post" action="/queue" class="demo__item">
+          <div class="demo__title">Run morning queue</div>
+          <div class="demo__row">
+            <label for="seed">Seed</label>
+            <input id="seed" name="seed" value="42" inputmode="numeric">
+            <button class="btn btn--primary btn--small" type="submit">Run</button>
+          </div>
+        </form>
+        <form method="post" action="/simulate-replies" class="demo__item">
+          <button class="btn btn--secondary btn--small btn--block" type="submit">Simulate broker replies</button>
+          <p class="demo__help">Answers every open follow-up the way a broker would.</p>
+        </form>
+        <form method="post" action="/demo/reset" class="demo__item">
+          <button class="btn btn--secondary btn--small btn--block" type="submit">Start over</button>
+          <p class="demo__help">Clears this demo's leads and empties the mock mailbox.</p>
+        </form>
+      </div>
+    </details>
+  </div>
 </header>
-<main>{% block content %}{% endblock %}</main>
+{% if banner %}
+<div class="banner banner--{{ banner.kind }}" data-banner="{{ banner.kind }}" role="{{ 'alert' if banner.kind == 'error' else 'status' }}">
+  <span>{{ banner.text }}</span>
+  <button class="banner__close" type="button" data-close aria-label="Dismiss">×</button>
+</div>
+{% endif %}
+<main class="page">{% block content %}{% endblock %}</main>
+<script src="/static/app.js" defer></script>
 </body>
 </html>

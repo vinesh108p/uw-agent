@@ -134,6 +134,11 @@ class Service:
             count += 1
         return count
 
+    def reset(self) -> None:
+        """Start over (demo): forget every lead and empty the mock mailbox."""
+        self.store.reset()
+        self.mailbox.reset()
+
     def board(self) -> dict[str, Any]:
         rows = []
         for lead_id in self.store.lead_ids():

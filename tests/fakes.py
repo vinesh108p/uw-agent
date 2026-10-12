@@ -67,6 +67,10 @@ class FakeMailbox:
     def emails_for_lead(self, lead_id: str) -> list[dict[str, Any]]:
         return [record for record in reversed(self.sent) if record["lead_id"] == lead_id]
 
+    def reset(self) -> None:
+        self.sent.clear()
+        self._by_key.clear()
+
 
 class FakeLeadgen:
     def __init__(self, queues: dict[int, list[dict[str, Any]]]):

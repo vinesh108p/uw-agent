@@ -18,3 +18,12 @@ def test_store_roundtrip(seed42, tmp_path):
     assert store.close_card(card, "approve") is True
     store.add_decision(card, lead.lead_id, 1, "approve", "", ("condition:exclude_liability",))
     assert store.latest_decision(lead.lead_id) == UWDecision("approve", "", 1, ("condition:exclude_liability",))
+def test_reset_starts_over_with_a_new_instance_id(seed42, tmp_path):
+    store = Store(tmp_path / "s.db")
+    store.upsert_lead(seed42["LEAD-00000042-009"])
+    row = store.enqueue_outbox("LEAD-00000042-009", "followup", 1, {"subject": "a"})
+    assert row["created_at"].endswith("Z") and "." in row["created_at"]
+    before = store.instance_id
+    store.reset()
+    assert store.lead_ids() == [] and store.outbox_for("LEAD-00000042-009") == []
+    assert store.instance_id != before and Store(tmp_path / "s.db").instance_id == store.instance_id

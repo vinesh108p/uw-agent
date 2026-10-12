@@ -1,4 +1,4 @@
-"""UW board: one card per decision, the drafted outbound attached; case pages show the playbook path and provenance."""
+"""UW board web app: underwriter-facing pages, decision forms and demo controls."""
 
 from __future__ import annotations
 
@@ -6,31 +6,36 @@ from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from . import views
 from .assessment import UW_CHOICES
 from .service import NeedsNote, Service
 
-TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+HERE = Path(__file__).parent
+TEMPLATES = Jinja2Templates(directory=str(HERE / "templates"))
 
 
 def create_app(service: Service) -> FastAPI:
     app = FastAPI(title="Stand UW assistant")
+    app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
         return {"status": "ok"}
 
     @app.get("/", response_class=HTMLResponse)
-    def board(request: Request) -> HTMLResponse:
-        return TEMPLATES.TemplateResponse(request, "board.html", service.board())
+    def queue(request: Request) -> HTMLResponse:
+        return TEMPLATES.TemplateResponse(request, "queue.html", views.queue_page(service, request.query_params))
 
     @app.get("/cases/{lead_id}", response_class=HTMLResponse)
     def case(request: Request, lead_id: str) -> HTMLResponse:
         view = service.case_view(lead_id)
         if view is None:
             raise HTTPException(404, f"unknown lead {lead_id}")
-        return TEMPLATES.TemplateResponse(request, "case.html", view)
+        # Interim (replaced in Task 4): the old case template inside the new header.
+        return TEMPLATES.TemplateResponse(request, "case.html", {**view, "chrome": views.chrome(service), "banner": None})
 
     @app.post("/queue")
     def run_queue(seed: str = Form("")) -> RedirectResponse:
