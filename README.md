@@ -61,4 +61,4 @@ sim-harness/    the provided lead generator and mock mailbox, unmodified
 
 ## Not built
 
-Third-party data is stubbed (CRM, protection class, replacement cost, fire simulation, terrain, imagery, roads, KYC). There is no real email, authentication, follow-up timers, undo window before send, research agent, attachment reading, or rating. The [build-next list](docs/evals.md#what-i-would-build-next) puts them in order, and [architecture.md](docs/architecture.md#what-is-not-built) says what each would take.
+Third-party data is stubbed (CRM, protection class, replacement cost, fire simulation, terrain, imagery, roads, KYC). There is no real email, authentication, follow-up timers, undo window before send, research agent, attachment reading, or rating. The [build-next list](docs/evals.md#what-i-would-build-next) puts them in order, and [architecture.md](docs/architecture.md#what-is-not-built) says what each would take. Weaknesses I know about in what is built (stale data, late replies, audit gaps and others) are in [known gaps](docs/architecture.md#known-gaps).

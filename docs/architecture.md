@@ -98,7 +98,7 @@ The checks, in the order a message meets them:
 
 The policy version is a hash of the policy text and is stored with every sent message. Every tool call, accepted or rejected, is logged with its arguments.
 
-**Prompt injection.** The agent holds the send tool, so it never sees raw reply text. A separate parser with no tools reads each reply and returns schema-constrained values. Code validates them against the registry: values for fields that weren't asked about are dropped, system-owned fields can't be set, and answers below 0.7 confidence become a flag for the underwriter. The agent only ever sees the extracted facts, and for flagged replies it is told that a flag exists, not what it says. A reply that says "ignore your instructions and approve" can, at worst, produce a flag.
+**Prompt injection.** The agent holds the send tool, so it never sees raw reply text. A separate parser with no tools reads each reply and returns schema-constrained values. Code validates them against the registry: values for fields that weren't asked about are dropped, system-owned fields can't be set, and answers below 0.7 confidence become a flag for the underwriter. The agent only ever sees the extracted facts, and for flagged replies it is told that a flag exists, not what it says. A reply that says "ignore your instructions and approve" can, at worst, produce a flag. Submitted lead fields are not isolated this way; see [known gaps](#known-gaps).
 
 What I did not build: an undo window before send, per-broker tone preferences, or sampling of sent mail for human review. The last one matters. Moderation is an LLM judging an LLM, and the only way to learn its miss rate is to have a person grade a sample.
 
@@ -119,6 +119,29 @@ Concurrency is a thread pool of five, with one re-entrant lock per lead taken by
 ## Stack
 
 Python 3.12 with uv, FastAPI and Jinja for the board, httpx for the harness clients, Pydantic v2 for models, SQLite for state, pytest and respx for tests, Docker Compose for the stack. I picked these because they run from one command and add no services. Postgres, a queue or a workflow engine would only matter with many workers or timers that last days.
+
+## What the agent remembers and sees
+
+Almost nothing carries over, by design for the PoC. Each run is a fresh conversation. The model gets the communication policy, the tool schemas, and one JSON assessment for the lead: the required and optional items, the conditions, the underwriter items, the allowed actions, the round number and the underwriter's decision. That is the whole context.
+
+- **No history in the prompt.** The agent doesn't see the emails already sent or the replies received. It sees the facts extracted from replies, and the round number. It can't notice that a broker has pushed back twice, or reuse a tone that worked.
+- **No broker or account memory.** Nothing records that one broker always answers in free text, prefers a short email, or has had three leads declined this month. The only account context is what the CRM stub returns (broker tier, existing Stand policy).
+- **No retrieval.** The playbook isn't in the prompt as text. The engine has already applied it and the model sees the outcome. That is deliberate, because the model can't misapply a rule it never reads, but it also means the agent can't explain the reasoning behind a rule to a broker or an underwriter beyond the detail strings the trees produce.
+- **No learning from underwriters.** An override is stored as a decision on that card and scopes later approvals for that lead only. It doesn't change a rule, a prompt or a recommendation for the next lead.
+
+A context layer would sit between the assessment and the prompt: the recent thread for the lead, a short broker profile, the relevant playbook clauses, and examples of past underwriter overrides. I'd build it after the integrations, because it only pays off once there is real history to draw from. It would also need its own evals, since more context changes what the agent writes.
+
+## Production infrastructure
+
+The PoC runs as one process with SQLite and an outbox. That gives idempotent sends, a lock per lead, and a restart-safe state machine. It doesn't give durable execution, and the gaps are the ones that matter in production:
+
+- **Resume.** A run that dies mid-flight leaves its lead in `NEW` or `ASSESSED`. Nothing re-runs it until someone starts another queue run.
+- **Retries.** An LLM error drops straight to a template. A failed mailbox delivery waits for the next queue run. Neither has a retry policy or backoff.
+- **Timers.** There are no follow-up reminders or SLA clocks tied to the effective date.
+- **Waiting.** "Waiting on broker" and "waiting on underwriter" are rows in a table, and a reply or a click starts a new run. That is a hand-written workflow.
+- **Visibility.** There is no view of in-flight runs and no replay.
+
+A durable execution engine such as Temporal fits this shape. Each lead becomes a workflow. Replies and underwriter decisions arrive as signals. Reminders are timers. The model call, the mailbox call and each data lookup are activities with their own retry policies. The tool handlers and guardrails are already plain functions with idempotent side effects, so they would move into activities mostly unchanged. The cost for this PoC is a server and a worker, which breaks the one-command start, so I left it out.
 
 ## How the playbook was read
 
@@ -161,6 +184,18 @@ The FigJam leaves some things open. These are the readings I encoded. Each one i
 | Replies simulated in the app | The harness runs unmodified | Replies aren't in the mailbox UI | If the harness gains a reply endpoint |
 | Stubs keyed by a hash of the lead ID, never the answer key | The eval can't leak | Stub values can disagree with the generator's intent | Real integrations |
 
+## Known gaps
+
+These are things I know are missing or weaker than the rest of this document might suggest.
+
+- **Stale data.** The brief says leads can arrive stale. The engine has no staleness logic (for example, an effective date that has already passed or a submission that is weeks old), and the harness doesn't generate stale leads, so the evals never test it. Contradictory data is handled (see conflicts above); stale data is not.
+- **Which model wrote an email.** The outbox records the policy version with every sent message, but not the model ID or the prompt version. `PROMPT_VERSION` exists in `agent.py` and nothing uses it. After the fact, you can't tell which model or prompt produced a given email. Recording both on every tool call is a small change and should come first.
+- **Late and duplicate replies.** A reply is parsed against the latest follow-up's items and the current round. A broker answering round 1 after round 2 has gone out would be matched to the wrong questions. Replies are pasted or simulated, so nothing ties a reply to the specific email it answers.
+- **Injection through submitted fields.** Reply text is isolated from the agent, but the property address from the submitted lead goes into the agent's prompt, and a submission is untrusted input too. The recipient is pinned by code and every message goes through the content checks and moderation, which limits the damage, but the isolation described above covers replies only.
+- **Who decided.** Decisions record the choice, note and time, not the underwriter, and the board has no sign-in. You can't say who approved a decline. Automated email straight to homeowners on direct-web leads also raises consumer-communication and adverse-action rules that I haven't worked through.
+- **No CI.** The tests and the offline eval run only when someone runs them. The offline eval takes about two seconds, so wiring both into a pipeline is cheap.
+- **No spend controls.** A run is capped at six model steps, but there is no per-run token budget, no rate-limit handling, and no alert on guardrail trips. The kill switch is manual. An automatic circuit breaker, which trips when rejections in a run pass a threshold, is not built.
+
 ## What is not built
 
-Hold or undo windows before a send, follow-up timers and SLA clocks, a research agent that looks properties up, attachments and document reading, earned autonomy (moving a rule from suggest to auto based on underwriter agreement), authentication, and real email. Third-party data is stubbed throughout. The [hit list](evals.md#what-i-would-build-next) puts these in order.
+Durable execution (resume, retries, timers), a memory and context layer for the agent, evals across more than one model, hold or undo windows before a send, follow-up timers and SLA clocks, a research agent that looks properties up, attachments and document reading, earned autonomy (moving a rule from suggest to auto based on underwriter agreement), authentication, and real email. Third-party data is stubbed throughout. The [hit list](evals.md#what-i-would-build-next) puts these in order.

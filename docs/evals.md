@@ -103,6 +103,8 @@ Two things follow. First, only about 3% of leads can be quoted as they arrive, s
 - There is no message-quality score beyond the deterministic checks and the moderator. I didn't build a rubric judge. "Correct and minimal" is measured by asks (recall and precision), but "clear and warm" is not measured at all.
 - The moderator and the content checks are the only things standing between the agent and a broker. 18 red-team emails is enough to catch a regression, not enough to estimate a miss rate.
 - Offline and live runs use the same engine, so the offline run says nothing about the model.
+- The harness doesn't generate stale leads, and the engine has no staleness logic, so stale data is untested. Late and duplicate replies, and injection through submitted fields, aren't tested either; see [known gaps](architecture.md#known-gaps).
+- Only one model has been run live, `claude-opus-5-5`. I haven't compared Sonnet or Haiku, so I can't say whether a cheaper tier holds the gates.
 - I did not measure cost or latency.
 
 ## Iteration plan
@@ -123,12 +125,14 @@ Every fixed failure becomes a permanent case in the gold set or the red-team set
 
 What I would add next, in this order:
 
-1. Repeat live runs three times per lead and gate safety on all three passing. A gate that passes two runs in three is failing.
-2. Split seeds into development seeds for iterating and held-out seeds used only for release decisions.
-3. A rubric judge for message quality, calibrated against about 20 emails I grade by hand, and trusted only above 80% agreement.
-4. Recorded model responses, so the engine, tool and guardrail checks run in CI for free. Any prompt, policy or model change would invalidate them and require a live run.
-5. A second underwriter-labelled sample.
-6. In production, underwriter overrides with reason codes become new gold cases every week, and rules move from suggest to auto only on measured agreement. Drift monitors would watch override rate per rule, questions per lead, reply rounds, guardrail trips and the touchless rate.
+1. Run the tests and the offline eval in CI on every change. It takes seconds.
+2. Repeat live runs three times per lead and gate safety on all three passing. A gate that passes two runs in three is failing.
+3. Run the same eval against other models (Sonnet 5.5 and Haiku 5.5 at least) and compare gates, rejection counts, ask recall and the moderator's miss rate. The model is the `UW_MODEL` setting, so this is configuration, not code. Moderation should be tried on a different model from the agent as well.
+4. Split seeds into development seeds for iterating and held-out seeds used only for release decisions.
+5. A rubric judge for message quality, calibrated against about 20 emails I grade by hand, and trusted only above 80% agreement.
+6. Recorded model responses, so the engine, tool and guardrail checks run in CI for free. Any prompt, policy or model change would invalidate them and require a live run.
+7. A second underwriter-labelled sample.
+8. In production, underwriter overrides with reason codes become new gold cases every week, and rules move from suggest to auto only on measured agreement. Drift monitors would watch override rate per rule, questions per lead, reply rounds, guardrail trips and the touchless rate.
 
 ## What I would build next
 
@@ -137,10 +141,11 @@ Ordered by underwriter minutes saved and questions removed, then by risk.
 1. Property-data prefill and confirm (ATTOM, Regrid or assessor records, plus imagery). The 23% the stubs fill today comes from fake sources, so real ones are the cheapest way to remove more questions.
 2. Real protection class, replacement cost and fire-simulation integrations. These drive most branches of the playbook, and the stubs are the biggest gap between this demo and production.
 3. Document understanding for replies: declarations pages, roof permits, invoices and inspection reports.
-4. Follow-up timers keyed to the effective date, and an undo window on sends.
+4. Durable execution (resume, retries, timers) and follow-up reminders keyed to the effective date, plus an undo window on sends. See [production infrastructure](architecture.md#production-infrastructure).
 5. Broker negotiation for the "deal killer" ladders (KYC exclusions, replacement cost documentation).
-6. A research agent with real tools for the FigJam "look it up" nodes: maps and listings for decks, pools, access and vegetation, and screening with the privacy and FCRA controls that needs.
-7. Rule authoring from underwriter notes, and a dashboard for moving rules from suggest to auto.
-8. Misrepresentation cross-checks between what was submitted and third-party data.
-9. Rating, quote documents and subjectivity tracking.
-10. Broker-level digests.
+6. Memory and context for the agent: the lead's thread, a broker profile, and past underwriter overrides. See [what the agent remembers](architecture.md#what-the-agent-remembers-and-sees).
+7. A research agent with real tools for the FigJam "look it up" nodes: maps and listings for decks, pools, access and vegetation, and screening with the privacy and FCRA controls that needs.
+8. Rule authoring from underwriter notes, and a dashboard for moving rules from suggest to auto.
+9. Misrepresentation cross-checks between what was submitted and third-party data.
+10. Rating, quote documents and subjectivity tracking.
+11. Broker-level digests.
