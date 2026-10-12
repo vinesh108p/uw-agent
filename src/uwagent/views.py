@@ -197,3 +197,111 @@ def queue_page(service: Service, params: Mapping[str, str]) -> dict[str, Any]:
     ]
     return {"chrome": chrome(service), "banner": banner(service, params), "tiles": tiles, "cards": cards,
             "rows": rows, "waiting": counts.get("FOLLOW_UP_SENT", 0)}
+
+
+EMAIL_KINDS = {"followup": "Follow-up", "quote": "Quote", "decline": "Decline notice"}
+DECISION_TEXT = {"approve": "You approved", "ask_broker": "You asked the broker", "decline": "You declined"}
+
+
+def _stands(state: str, view: Mapping[str, Any], assessment: Mapping[str, Any], recipient: str) -> dict[str, Any]:
+    """The 'Where this stands' panel for leads without an open decision card."""
+    outbox = view["outbox"]
+    if state == "FOLLOW_UP_SENT":
+        row = _latest(outbox, "followup")
+        count = len(row["payload"].get("items", [])) if row else 0
+        when = p.fmt_when(row["created_at"]) if row else "earlier"
+        round_ = row["round"] if row else 0
+        return {"text": f"We asked the broker for {p.plural(count, 'item')} {when} (round {round_}). "
+                        "When they reply, the assistant re-checks the lead automatically."}
+    if state == "QUOTED":
+        quote = view["quote"] or {}
+        row = _latest(outbox, "quote")
+        when = p.fmt_when(row["created_at"]) if row else "earlier"
+        conditions = quote.get("conditions") or []
+        text = (f"Quote sent {when} with {p.plural(len(conditions), 'condition')}." if conditions
+                else f"Quote sent {when} with no conditions.")
+        return {"text": text, "conditions": conditions, "subjectivities": quote.get("subjectivities") or []}
+    if state == "DECLINED":
+        row = _latest(outbox, "decline")
+        when = p.fmt_when(row["created_at"]) if row else "earlier"
+        found = [{"tag": p.page_name(entry["tree"]), "text": p.reason_text(entry["detail"])}
+                 for entry in assessment.get("knockouts", [])]
+        return {"text": f"Declined {when}.", "reasons": found, "after": f"Decline notice sent to {recipient}."}
+    if state == "AWAITING_UW":
+        return {"text": "This lead needs your decision."}
+    return {"text": "The assistant is working on this lead."}
+
+
+def _conversation(service: Service, lead_id: str, view: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Every email sent, every broker reply (with what the assistant read from it) and every UW decision, in order."""
+    registry = service.registry
+    read_as: dict[str, list[dict[str, str]]] = {}
+    for fact in service.store.facts_for(lead_id):
+        if fact.source == "reply":
+            label = registry[fact.field].label if fact.field in registry else fact.field
+            read_as.setdefault(fact.detail, []).append({"label": label, "value": p.fmt_value(fact.field, fact.value, registry)})
+    reply_events = [event for event in view["events"] if event["type"] == "reply_received"]
+    items: list[dict[str, Any]] = []
+    for row in view["outbox"]:
+        lines = (row["payload"].get("body") or "").splitlines()
+        items.append({"type": "email", "at": row["created_at"], "when": p.fmt_when(row["created_at"]),
+                      "kind": EMAIL_KINDS.get(row["kind"], row["kind"]), "round": row["round"],
+                      "to": row["payload"].get("to", ""), "subject": row["payload"].get("subject", ""),
+                      "preview": "\n".join(lines[:3]), "rest": "\n".join(lines[3:]),
+                      "status": "Sent" if row["status"] == "sent" else "Retrying"})
+    for index, message in enumerate(view["messages"]):
+        flags = reply_events[index]["payload"].get("flags", []) if index < len(reply_events) else []
+        items.append({"type": "reply", "at": message["created_at"], "when": p.fmt_when(message["created_at"]),
+                      "body": message["body"], "read_as": read_as.get(f"reply r{message['round']}", []), "flags": flags})
+    for event in view["events"]:
+        if event["type"] == "uw_decision":
+            items.append({"type": "decision", "at": event["created_at"], "when": p.fmt_when(event["created_at"]),
+                          "text": DECISION_TEXT.get(event["payload"].get("choice"), "You decided"),
+                          "note": event["payload"].get("note", "")})
+    order = {"decision": 0, "email": 1, "reply": 2}
+    items.sort(key=lambda item: (item["at"], order[item["type"]]))
+    return items
+
+
+def case_page(service: Service, lead_id: str, params: Mapping[str, str]) -> dict[str, Any] | None:
+    view = service.case_view(lead_id)
+    if view is None:
+        return None
+    registry = service.registry
+    morning = morning_of(service)
+    lead, case, assessment = view["lead"], view["case"], view["assessment"]
+    values = _values(service, lead_id)
+    state = case["state"]
+    recipient = assessment.get("recipient") or "the broker"
+    effective, overdue = p.days_label(values.get("effective_date"), morning) if morning else ("Not provided", False)
+    checks = []
+    for tree in assessment.get("trees", []):
+        badge, tone = p.tree_badge(tree)
+        checks.append({"name": p.page_name(tree["tree"]), "badge": badge, "tone": tone, "reason": p.tree_reason(tree, registry)})
+    facts = assessment.get("facts", {})
+    card = view["card"]
+    return {
+        "chrome": chrome(service), "banner": banner(service, params), "lead_id": lead_id,
+        "name": p.insured_name(values), "property": p.property_line(values),
+        "status": p.status_label(state), "tone": p.status_tone(state),
+        "tier": p.tier_label(assessment.get("tier", 9)), "effective": effective, "overdue": overdue,
+        "channel": p.CHANNELS.get(lead.source, lead.source),
+        "card": decision_card(service, card, morning=morning, back=f"/cases/{lead_id}", in_case=True) if card else None,
+        "stands": _stands(state, view, assessment, recipient),
+        "flagged": [check for check in checks if check["badge"] != "Pass"],
+        "passed": [check for check in checks if check["badge"] == "Pass"],
+        "conversation": _conversation(service, lead_id, view),
+        "key_facts": p.key_facts(facts, registry),
+        "still_needed": [ask["label"] for ask in assessment.get("required_asks", [])],
+        "details": {
+            "facts": [{"label": registry[name].label if name in registry else name, "key": name,
+                       "value": p.fmt_value(name, entry["value"], registry), "source": p.source_label(entry, registry)}
+                      for name, entry in sorted(facts.items())],
+            "tool_calls": [{"run": call["run_id"], "tool": p.tool_label(call["tool"]), "ok": call["ok"],
+                            "result": "Done" if call["ok"] else
+                            "Blocked: " + "; ".join(reason.removeprefix("Rejected: ") for reason in call["reasons"])}
+                           for call in view["tool_calls"]],
+            "events": [{"when": p.fmt_when(event["created_at"]), "what": p.event_label(event["type"])}
+                       for event in view["events"]],
+        },
+    }

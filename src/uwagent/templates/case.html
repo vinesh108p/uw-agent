@@ -1,56 +1,116 @@
 {% extends "base.html" %}
-{% block title %}{{ lead.lead_id }}{% endblock %}
+{% from "_macros.html" import chip %}
+{% block title %}{{ name }}{% endblock %}
 {% block content %}
-<h2>{{ lead.lead_id }} · {{ address }}</h2>
-<p><span class="state">{{ case.state }}</span> round {{ case.rounds_sent }} · source {{ lead.source }} ·
-   effective {{ lead.fields.effective_date }}</p>
-{% if card %}<div class="card review"><strong>Open decision:</strong> {{ card.payload.summary }} <a href="/">Decide on the board</a></div>{% endif %}
+<a class="back" href="/">‹ Queue</a>
+<header class="case-head">
+  <h1>{{ name }} <span class="sep">·</span> <span class="case-head__property">{{ property }}</span></h1>
+  <div class="chips">
+    {{ chip(status, tone) }}
+    {{ chip(tier, "tier") }}
+    {{ chip("Effective " ~ effective, "red" if overdue else "plain") }}
+    {{ chip(channel, "plain") }}
+    <span class="mono">{{ lead_id }}</span>
+  </div>
+</header>
 
-<h3>Playbook</h3>
-<table>
-  <tr><th>Page</th><th>Result</th><th>Unknowns that matter</th></tr>
-  {% for t in assessment.trees or [] %}
-  <tr><td>{{ t.tree }}</td>
-      <td>{% if t.certain_decline %}<strong>Decline:</strong> {{ t.decline_reasons|join("; ") }}
-          {% else %}{% for o in t.outcomes %}{{ o.kind }}: {{ o.detail }}<br>{% endfor %}
-          {% if t.possible_decline %}<em>possible decline</em>{% endif %}{% endif %}</td>
-      <td>{{ t.unknowns|join(", ") }}</td></tr>
-  {% endfor %}
-</table>
+<section class="panel stands">
+  <h2 class="panel__title">Where this stands</h2>
+  {% if card %}
+  {% include "_card.html" %}
+  {% else %}
+  <p class="stands__text">{{ stands.text }}</p>
+  {% if stands.reasons %}
+  <ul class="reasons">{% for reason in stands.reasons %}<li><span class="tag">{{ reason.tag }}</span><span>{{ reason.text }}</span></li>{% endfor %}</ul>
+  {% endif %}
+  {% if stands.conditions %}<h3 class="minor">Conditions</h3><ul>{% for item in stands.conditions %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+  {% if stands.subjectivities %}<h3 class="minor">Subjectivities</h3><ul>{% for item in stands.subjectivities %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+  {% if stands.after %}<p class="stands__after">{{ stands.after }}</p>{% endif %}
+  {% endif %}
+</section>
 
-<h3>Asks</h3>
-<ul>{% for a in assessment.required_asks or [] %}<li>{{ a.label }} ({{ a.kind }}){% if a.note %}: {{ a.note }}{% endif %}</li>
-{% else %}<li class="muted">None</li>{% endfor %}</ul>
+<div class="case-grid">
+  <div class="case-main">
+    <section class="panel">
+      <h2 class="panel__title">Playbook check</h2>
+      {% if flagged %}
+      <ul class="checks">
+        {% for check in flagged %}<li class="check"><span class="check__name">{{ check.name }}</span>{{ chip(check.badge, check.tone) }}<span class="check__reason">{{ check.reason }}</span></li>{% endfor %}
+      </ul>
+      {% endif %}
+      {% if passed %}
+      <details class="passed">
+        <summary>{{ passed|length }} {{ "check" if passed|length == 1 else "checks" }} passed</summary>
+        <ul class="checks">
+          {% for check in passed %}<li class="check"><span class="check__name">{{ check.name }}</span>{{ chip(check.badge, check.tone) }}<span class="check__reason">{{ check.reason }}</span></li>{% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+      {% if not flagged and not passed %}<p class="muted">The playbook has not run for this lead yet.</p>{% endif %}
+    </section>
 
-<h3>Facts and provenance</h3>
-<table>
-  <tr><th>Field</th><th>Value</th><th>Source</th><th>Detail</th></tr>
-  {% for name, f in (assessment.facts or {}).items() %}
-  <tr><td>{{ name }}</td><td>{{ f.value }}</td><td>{{ f.source }}</td><td class="muted">{{ f.detail }}</td></tr>
-  {% endfor %}
-</table>
+    <section class="panel">
+      <h2 class="panel__title">Conversation</h2>
+      {% for item in conversation %}
+        {% if item.type == "email" %}
+        {% include "_email.html" %}
+        {% elif item.type == "reply" %}
+        <article class="thread-item reply">
+          <div class="thread-item__meta">{{ chip("Broker reply", "blue") }}<span>{{ item.when }}</span></div>
+          <pre class="email__body">{{ item.body }}</pre>
+          {% if item.read_as %}
+          <div class="read-as"><span class="muted">Assistant read this as:</span>{% for fact in item.read_as %}<span class="read-chip">{{ fact.label }} → {{ fact.value }}</span>{% endfor %}</div>
+          {% endif %}
+          {% for flag in item.flags %}<p class="flag">Needs your review: {{ flag }}</p>{% endfor %}
+        </article>
+        {% else %}
+        <article class="thread-item decision">
+          <div class="thread-item__meta">{{ chip("Underwriter", "slate") }}<span>{{ item.when }}</span></div>
+          <p class="decision-text"><strong>{{ item.text }}</strong>{% if item.note %}: “{{ item.note }}”{% endif %}</p>
+        </article>
+        {% endif %}
+      {% else %}
+      <p class="muted">Nothing has been sent for this lead yet.</p>
+      {% endfor %}
+      <details class="paste-reply">
+        <summary>Paste a broker reply</summary>
+        <form method="post" action="/cases/{{ lead_id }}/reply">
+          <textarea name="body" rows="4" placeholder="Numbered answers work best, for example: 1. Clay Tile"></textarea>
+          <button class="btn btn--secondary btn--small" type="submit">Record reply</button>
+        </form>
+      </details>
+    </section>
+  </div>
 
-<h3>Outbound</h3>
-{% for row in outbox %}
-<div class="card"><div><strong>{{ row.payload.subject }}</strong>
-  <span class="muted">{{ row.kind }} · round {{ row.round }} · {{ row.status }}</span></div><pre>{{ row.payload.body }}</pre></div>
-{% else %}<p class="muted">Nothing sent.</p>{% endfor %}
+  <aside class="case-side">
+    <section class="panel">
+      <h2 class="panel__title">Property and coverage</h2>
+      <dl class="facts">
+        {% for fact in key_facts %}<div class="fact"><dt>{{ fact.label }}</dt><dd>{{ fact.value }}<span class="fact__source">{{ fact.source }}</span></dd></div>{% endfor %}
+      </dl>
+    </section>
+    <section class="panel">
+      <h2 class="panel__title">Still needed</h2>
+      {% if still_needed %}<ul>{% for label in still_needed %}<li>{{ label }}</li>{% endfor %}</ul>{% else %}<p class="muted">Nothing outstanding.</p>{% endif %}
+    </section>
+  </aside>
+</div>
 
-<h3>Replies</h3>
-{% for m in messages %}<pre>{{ m.body }}</pre><p class="muted">intent: {{ m.parsed.intent }}</p>
-{% else %}<p class="muted">No replies yet.</p>{% endfor %}
-<form method="post" action="/cases/{{ lead.lead_id }}/reply">
-  <textarea name="body" placeholder="Paste a broker reply (numbered answers work offline)"></textarea>
-  <button>Record reply</button>
-</form>
-
-<h3>Agent tool calls</h3>
-<table>
-  <tr><th>Run</th><th>Tool</th><th>OK</th><th>Guardrail reasons</th></tr>
-  {% for c in tool_calls %}<tr><td class="muted">{{ c.run_id }}</td><td>{{ c.tool }}</td><td>{{ "yes" if c.ok else "no" }}</td>
-  <td>{{ c.reasons|join("; ") }}</td></tr>{% endfor %}
-</table>
-
-<h3>Timeline</h3>
-<ul>{% for e in events %}<li class="muted">{{ e.created_at }} · {{ e.type }} · {{ e.payload }}</li>{% endfor %}</ul>
+<details class="panel reviewer">
+  <summary>Details for reviewers</summary>
+  <h3 class="minor">All fields and where they came from</h3>
+  <table class="plain">
+    <thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead>
+    <tbody>{% for fact in details.facts %}<tr><td>{{ fact.label }} <span class="mono">{{ fact.key }}</span></td><td>{{ fact.value }}</td><td>{{ fact.source }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <h3 class="minor">Agent tool calls</h3>
+  <table class="plain">
+    <thead><tr><th>Tool</th><th>Result</th><th>Run</th></tr></thead>
+    <tbody>{% for call in details.tool_calls %}<tr><td>{{ call.tool }}</td><td class="{{ '' if call.ok else 'blocked' }}">{{ call.result }}</td><td class="mono">{{ call.run }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <h3 class="minor">Timeline</h3>
+  <table class="plain">
+    <tbody>{% for event in details.events %}<tr><td class="mono">{{ event.when }}</td><td>{{ event.what }}</td></tr>{% endfor %}</tbody>
+  </table>
+</details>
 {% endblock %}

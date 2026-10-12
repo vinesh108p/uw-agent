@@ -1,0 +1,17 @@
+{% from "_macros.html" import chip %}
+<article class="thread-item email">
+  <div class="thread-item__meta">
+    {{ chip(item.kind, "navy") }}
+    {% if item.kind == "Follow-up" %}<span>Round {{ item.round }}</span>{% endif %}
+    <span>{{ item.when }}</span>
+    {{ chip(item.status, "green" if item.status == "Sent" else "amber") }}
+  </div>
+  <div class="email__head">
+    <div><span class="muted">To</span> {{ item.to }}</div>
+    <div class="email__subject">{{ item.subject }}</div>
+  </div>
+  <pre class="email__body">{{ item.preview }}</pre>
+  {% if item.rest %}
+  <details class="email__more"><summary>Show the full email</summary><pre class="email__body">{{ item.rest }}</pre></details>
+  {% endif %}
+</article>
